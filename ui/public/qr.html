@@ -1,0 +1,40 @@
+<html>
+<head>
+  <title>QR Code</title>
+  <script src="/static/js/qrcode.js"></script>
+  <style>
+    body {
+      font-family: monospace;
+    }
+    #text {
+      font-size: 0.75em;
+      text-align: center;
+    }
+    #qrcode-svg {
+      margin: 0 auto;
+      width: 90%;
+      height: 90%;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="text"></div>
+  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="qrcode-svg">
+    <g id="qrcode"/>
+  </svg>
+  <script type="text/javascript">
+    const urlParams = new URLSearchParams(window.location.search);
+    const raw = urlParams.get('text');
+    const qrcode = new QRCode(document.getElementById("qrcode"), {
+      text: raw,
+      width: 512,
+      height: 512,
+      useSVG: true,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+    });
+    document.getElementById("text").innerHTML = raw;
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+name: aroma
+channels:
+- pytorch-nightly
+- conda-forge
+dependencies:
+- python=3.11
+- pytorch-nightly::pytorch
+- torchvision
+- torchaudio
+- pytorch-lightning
+- numpy
+- pillow
+- scipy
+- ftfy
+- pip
+- pip:
+  - transformers
+  - diffusers==0.16.1
+  - accelerate==0.18.0
+  - safetensors
+  - omegaconf

@@ -1,0 +1,41 @@
+{
+  "password": "",
+  "models_root": "./models",
+  "state_root": "./state",
+  "outputs_root": "./outputs",
+  "archives_root": "./archives",
+  "image_format": "webp",
+  "save_raw": false,
+  "init_values": {
+    "model": {
+      "path": "extracted/anything-v4.5",
+      "revision": null,
+      "variant": null
+    },
+    "textual_inversions": [
+      "EasyNegative.safetensors"
+    ],
+    "params": {
+      "width": 280,
+      "height": 420,
+      "sampling_method": "Default",
+      "sampling_steps": 25,
+      "cfg_scale": 8,
+      "prompt": "masterpiece, knight",
+      "negative_prompt": "EasyNegative, nsfw, worst quality, low quality",
+      "highres_fix": [
+        {
+          "width": 480,
+          "height": 720,
+          "strength": 0.6
+        }
+      ]
+    }
+  },
+  "webui": {
+    "host": "0.0.0.0",
+    "port": 0,
+    "username": "user",
+    "password": "user"
+  }
+}

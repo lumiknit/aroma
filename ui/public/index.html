@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    Aroma UI
+  </title>
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+</head>
+<body>
+  <!-------------------------------------------------------------->
+  <!-- Nav Bar-->
+  <nav class="navbar sticky-top navbar-expand-sm navbar-dark bg-dark justify-content-between">
+    <div class="container-fluid">
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <a class="navbar-brand" href="/index.html"> Aroma UI</a>
+        <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="window.scrollTo(0, 0)">Top</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="archives.html">Archives</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="qr-link" href="qr.html">QR</a>
+          </li>
+        </ul>
+      </div>
+      <div class="d-flex">
+        <div class="btn-group">
+          <a class="btn btn-outline-danger" href="/api/daemon/outputs" target="_blank" role="button" id="btn-daemon-status"> Daemon </a>
+          <button id="btn-daemon-switch" type="button" class="btn btn-danger" onclick="switchDaemonStatus()"> Off </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Alert -->
+  <div id="alert-placeholder" class="container">
+
+  </div>
+    
+  <!-- Controller -->
+  <div class="container">
+    <!-- Password -->
+    <small>
+      Put daemon password to get data from daemon.
+    </small>
+    <div class="input-group mb-2">
+      <span class="input-group-text"> Daemon PW </span>
+      <input type="text" id="text-pw" class="form-control" placeholder="">
+      <button id="btn-pw" class="btn btn-danger" onclick="updatePassword()"> Apply </button>
+    </div>
+
+    <!-- Tools -->
+    <div class="card mt-2">
+      <h6 class="card-header d-flex align-items-center justify-content-between">
+        Tools
+      </h6>
+      <div class="card-body p-2">
+        <button type="button" class="btn btn-outline-danger" onclick="archiveOutputs()">
+          Archive and clean outputs
+        </button>
+      </div>
+    </div>
+    
+
+    <!-- Config -->
+    <div class="card mt-2">
+      <h5 class="card-header d-flex align-items-center justify-content-between">
+        Config
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="applyConfig()">Apply</button>
+      </h5>
+      <div class="card-body container p-2">
+        <!-- Setting -->  
+        <div class="row mb-1 g-1">
+          <div class="input-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"> Model Path </button>
+            <ul id="models-dropdown-list" class="dropdown-menu">
+              <li><a class="dropdown-item" href="#"> Test </a></li>
+            </ul>
+            <input type="text" id="config-model-path" class="form-control" placeholder="">
+          </div>  
+        </div>
+        <div class="row mb-1 g-1">
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text"> S. Method </span>
+              <select id="config-sampling-method" class="form-select" aria-label="Sampling Method">
+                <option value="Default" selected>Default</option>
+                <option value="Euler">Euler</option>
+                <option value="Euler A">Euler A</option>
+                <option value="LMS">LMS</option>
+                <option value="Heun">Heun</option>
+                <option value="DDIM">DDIM</option>
+                <option value="DDIM Inverse">DDIM Inverse</option>
+                <option value="DDPM">DDPM</option>
+                <option value="DPM++ 2S">DPM++ 2S</option>
+                <option value="DPM++ 2M">DPM++ 2M</option>
+                <option value="DPM++ 2M Karras">DPM++ 2M Karras</option>
+                <option value="DPM++ 3S">DPM++ 3S</option>
+                <option value="DPM++ 3M">DPM++ 3M</option>
+                <option value="DPM++ 3M">DPM++ 3M Karras</option>
+                <option value="PNDM">PNDM</option>
+                <option value="IPNDM">IPNDM</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text"> Current </span>
+              <input type="text" disabled="true" id="config-current-sampling-method" class="form-control">
+            </div>
+          </div>
+        </div>
+        <div class="row mb-1 g-1">
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text"> S. Steps </span>
+              <input type="text" id="config-sampling-steps" class="form-control" placeholder="">
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text"> CFG </span>
+              <input type="text" id="config-cfg-scale" class="form-control" placeholder="">
+            </div>
+          </div>
+        </div>
+        <div class="row mb-1 g-1">
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text"> Width </span>
+              <input type="text" id="config-width" class="form-control" placeholder="">
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text"> Height </span>
+              <input type="text" id="config-height" class="form-control" placeholder="">
+            </div>
+          </div>
+        </div>
+        <div class="row mb-1 g-1">
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text text-white fw-bold bg-success"> + </span>
+              <textarea class="form-control" id="config-prompt" rows="3" style="font-size: 0.75em;"></textarea>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text text-white fw-bold bg-danger"> - </span>
+              <textarea class="form-control" id="config-negative-prompt" rows="3" style="font-size: 0.75em;"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="row mb-1 g-1">
+          <div class="input-group">
+            <span class="input-group-text"> etc </span>
+            <textarea class="form-control font-monospace" id="config-other" rows="2" style="font-size: 0.75em;"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- State -->
+    <div class="card mt-2">
+      <h5 class="card-header d-flex align-items-center justify-content-between">
+        State <span id="state-status" class="badge badge-lg bg-primary"></span>
+      </h5>
+      <div class="card-body p-2">
+        <div> <b> Details </b> <span id="state-details" class="font-monospace" style="font-size: 0.5rem;"></span></div>
+        <div class="progress">
+          <div id="state-progress" class="progress-bar progress-bar-striped" role="progressbar" style="width: 10%"></div>
+        </div>
+        <div> <b> Started(Elapsed) </b> <span id="state-started"></span>(<span id="state-elapsed"></span>)</div>
+        <div> <b> Last File(Elapsed) </b> <span id="state-last-file"></span>(<span id="state-last-elapsed"></span>)</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Gallery -->
+  <div class="container mt-2">
+    <div class="row g-1">
+      <div id="gallery-col-0" class="col-4"> </div>
+      <div id="gallery-col-1" class="col-4"> </div>
+      <div id="gallery-col-2" class="col-4"> </div>
+    </div>
+  </div>
+
+  <script src="/static/js/crypto-js.min.js" type="text/javascript"></script>
+  <script src="/static/js/pako.min.js" type="text/javascript"></script>
+  <script src="/static/js/jquery-3.6.4.min.js" type="text/javascript"></script>
+  <script src="/static/js/popper.min.js" type="text/javascript"></script>
+  <script src="/static/js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="/static/js/enc.js" type="text/javascript"></script>
+  <script type="text/javascript" src="/static/index.js"></script>
+</body>
+</html>
+
