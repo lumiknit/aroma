@@ -1,13 +1,15 @@
 from packaging.version import Version
 import torch
 
+
 def torch_device():
     if torch.cuda.is_available():
-        return 'cuda'
+        return "cuda"
     elif torch.backends.mps.is_available():
-        return 'mps'
+        return "mps"
     else:
-        return 'cpu'
+        return "cpu"
+
 
 def is_torch_2_0():
     torch_version = Version(torch.__version__)

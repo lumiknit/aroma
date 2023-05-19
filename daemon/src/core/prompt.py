@@ -10,6 +10,8 @@ Prompt Grammer
 (<prompts>) -> weighted by 1.1
 [<prompts>] -> weighted by 0.9
 """
+
+
 def text_to_weighted_list(text):
     weight_factor = 1.0
     if not isinstance(text, str):
@@ -19,24 +21,24 @@ def text_to_weighted_list(text):
     i = 0
     while i < len(text):
         c = text[i]
-        if c == '(':
+        if c == "(":
             stack.append((len(chunks), 1 + 0.1 * weight_factor))
             chunks.append(("", 1.0))
-        elif c == '[':
+        elif c == "[":
             stack.append((len(chunks), 1 - 0.1 * weight_factor))
             chunks.append(("", 1.0))
-        elif c == ')' or c == ']':
+        elif c == ")" or c == "]":
             if len(stack) > 0:
                 idx, weight = stack.pop()
                 for j in range(idx, len(chunks)):
                     chunks[j] = (chunks[j][0], chunks[j][1] * weight)
             chunks.append(("", 1.0))
-        elif c == ':':
+        elif c == ":":
             # Parse weight (float)
             j = i + 1
             num = ""
             c = text[j]
-            while j < len(text) and (c <= ' ' or c == '.' or c.isdigit()):
+            while j < len(text) and (c <= " " or c == "." or c.isdigit()):
                 num += c
                 j += 1
                 c = text[j]
@@ -60,8 +62,9 @@ def text_to_weighted_list(text):
     weights = []
     while len(chunks) > 0:
         # Find minimum weight
-        min_weight = float('inf')
-        for i in range(len(chunks)): min_weight = min(min_weight, chunks[i][1])
+        min_weight = float("inf")
+        for i in range(len(chunks)):
+            min_weight = min(min_weight, chunks[i][1])
         # Create sentence with the weight
         sentence = ""
         for i in range(len(chunks)):
@@ -74,6 +77,7 @@ def text_to_weighted_list(text):
         chunks = [chunk for chunk in chunks if chunk[1] >= 0.001]
     return sentences, weights
 
+
 class Prompt:
     def __init__(self, text):
         self.text = text
@@ -85,9 +89,10 @@ class Prompt:
         # Check text type
         if not isinstance(text, str):
             raise Exception("Invalid text (expect str)")
-        
+
         # Check if text is the same. If so, use cached one
-        if self.text == text: return
+        if self.text == text:
+            return
 
         # Try to convert prompt
         if isinstance(txt2img, TextualInversionLoaderMixin):
@@ -106,18 +111,18 @@ class Prompt:
 
         # Put empty tokens to result
         empty_token_ids = torch.tensor(
-            [txt2img.tokenizer.bos_token_id] +
-            [txt2img.tokenizer.eos_token_id] +
-            [txt2img.tokenizer.pad_token_id] * (text_input_ids.shape[1] - 2),
+            [txt2img.tokenizer.bos_token_id]
+            + [txt2img.tokenizer.eos_token_id]
+            + [txt2img.tokenizer.pad_token_id] * (text_input_ids.shape[1] - 2),
             dtype=torch.int,
             device=device,
         ).unsqueeze(0)
-        token_tensors = torch.cat(
-            [empty_token_ids, text_input_ids.to(device)],
-            dim=0)
+        token_tensors = torch.cat([empty_token_ids, text_input_ids.to(device)], dim=0)
 
-        if hasattr(txt2img.text_encoder.config, "use_attention_mask") \
-                and txt2img.text_encoder.config.use_attention_mask:
+        if (
+            hasattr(txt2img.text_encoder.config, "use_attention_mask")
+            and txt2img.text_encoder.config.use_attention_mask
+        ):
             attention_mask = text_inputs.attention_mask.to(device)
         else:
             attention_mask = None
@@ -126,14 +131,14 @@ class Prompt:
             token_tensors,
             attention_mask=attention_mask,
         )[0]
-        
+
         empty_e = embeds[:1]
         text_e = embeds[1:]
 
         # Accumulate weightes
         embeds = empty_e
         for i in range(len(sentences)):
-            embeds += (text_e[i:i+1] - embeds) * weights[i]
+            embeds += (text_e[i : i + 1] - embeds) * weights[i]
 
         self.text = text
         self.embeds = embeds

@@ -3,15 +3,17 @@ import time
 from core.state import State
 from core.pipes import SDPipes
 
-state = State.init_from_config_files([
-    'default_config.json',
-    'config.json',
-])
+state = State.init_from_config_files(
+    [
+        "default_config.json",
+        "config.json",
+    ]
+)
 
 pipes = SDPipes()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Main Loop
     i = 0
     while True:
