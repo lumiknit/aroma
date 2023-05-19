@@ -89,11 +89,11 @@
           </div>  
         </div>
         <div class="row mb-1 g-1">
-          <div class="col-6">
+          <div class="col-12">
             <div class="input-group">
               <span class="input-group-text"> S. Method </span>
               <select id="config-sampling-method" class="form-select" aria-label="Sampling Method">
-                <option value="Default" selected>Default</option>
+                <option id="config-sampling-method-current" value="Default" selected>Default</option>
                 <option value="Euler">Euler</option>
                 <option value="Euler A">Euler A</option>
                 <option value="LMS">LMS</option>
@@ -110,12 +110,6 @@
                 <option value="PNDM">PNDM</option>
                 <option value="IPNDM">IPNDM</option>
               </select>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="input-group">
-              <span class="input-group-text"> Current </span>
-              <input type="text" disabled="true" id="config-current-sampling-method" class="form-control">
             </div>
           </div>
         </div>
@@ -148,16 +142,16 @@
           </div>
         </div>
         <div class="row mb-1 g-1">
-          <div class="col-6">
+          <div class="col-sm-12-sm col-md-6">
             <div class="input-group">
               <span class="input-group-text text-white fw-bold bg-success"> + </span>
-              <textarea class="form-control" id="config-prompt" rows="3" style="font-size: 0.75em;"></textarea>
+              <textarea class="form-control" id="config-prompt" rows="4" style="font-size: 0.75em;"></textarea>
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-sm-12 col-md-6">
             <div class="input-group">
               <span class="input-group-text text-white fw-bold bg-danger"> - </span>
-              <textarea class="form-control" id="config-negative-prompt" rows="3" style="font-size: 0.75em;"></textarea>
+              <textarea class="form-control" id="config-negative-prompt" rows="4" style="font-size: 0.75em;"></textarea>
             </div>
           </div>
         </div>

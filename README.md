@@ -65,8 +65,11 @@ You can
 
 ## TODO
 
-- Change start/end time to UTC
-- Fix unknown delay during prompt generation
-- Multiple width/height/prompt choosed randomly
-- WebUI Auth
-- Encrypt outputs & data between daemon & UI
+- Fix unknown delay during prompt embed
+  - Occur during forward
+- Add imageviewer
+- When model changed, clean cache on GPU
+- Remove verbose alert (First launche)
+- Fix empty background for unknown status
+- Remove verbose timestep in generation status
+- Improve sampler steps UI

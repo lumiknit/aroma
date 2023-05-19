@@ -273,7 +273,10 @@ const reload = () => {
         $('#config-model-path').attr("placeholder", data.values.model.path);
       }
       if(data.values.params !== undefined) {
-        $('#config-current-sampling-method').val(data.values.params.sampling_method);
+        let new_text = "Current: " + data.values.params.sampling_method;
+        if($('#config-sampling-method-current').text() !== new_text) {
+          $('#config-sampling-method-current').text(new_text);
+        }
         $('#config-sampling-steps').attr("placeholder", data.values.params.sampling_steps);
         $('#config-cfg-scale').attr("placeholder", data.values.params.cfg_scale);
         $('#config-width').attr("placeholder", data.values.params.width);
@@ -440,6 +443,7 @@ const applyConfig = () => {
       appendAlert("success", "Updated!");
       // Reset all fields
       $('#config-model-path').val("");
+      $('#config-sampling-method').val("Default");
       $('#config-sampling-steps').val("");
       $('#config-cfg-scale').val("");
       $('#config-width').val("");

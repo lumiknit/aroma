@@ -156,7 +156,7 @@ class SDPipes:
             new_scheduler = DDIMInverseScheduler \
                 .from_config(new_scheduler.config)
         elif name == "DDPM":
-            new_scheduler = DDPMDiscreteScheduler \
+            new_scheduler = DDPMScheduler \
                 .from_config(new_scheduler.config)
         elif name == "DPM++ 2S":
             new_scheduler = DPMSolverSinglestepScheduler \
