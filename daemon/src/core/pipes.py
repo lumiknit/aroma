@@ -93,7 +93,7 @@ class SDPipes:
             txt2img.unet.set_attn_processor(AttnProcessor2_0())
 
         if torch_device() == 'cuda':
-            txt2img.unet = torch.compile(txt2img.unet)
+            #txt2img.unet = torch.compile(txt2img.unet)
             try:
                 import xformers
                 txt2img.enable_xformers_memory_efficient_attention()
