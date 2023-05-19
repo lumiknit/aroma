@@ -49,7 +49,10 @@ const openImageInNewTab = (name) => {
     return;
   }
   let url = "data:image/" + img.a.image_format + ";base64," + img.a.image;
-  window.open(url, "_blank");
+  let s = window.open("imgview.html", "_blank");
+  s.addEventListener("load", () => {
+    s.document.getElementById("image").src = url;
+  });
 };
 
 const newImageAndCard = (name) => {
@@ -241,7 +244,11 @@ const reload = () => {
       "save_image": "info",
     };
     status.removeClass("bg-danger bg-warning bg-primary bg-info");
-    status.addClass("bg-" + statusColor[data.name]);
+    const color = statusColor[data.name];
+    if(color === undefined) {
+      status.addClass("bg-secondary");
+    }
+    status.addClass("bg-" + color);
     $('#state-details').text(JSON.stringify(data.values));
     // Check it is progress
     let progress = $('#state-progress');
@@ -498,7 +505,7 @@ const switchDaemonStatus = () => {
 };
 
 // Password
-const updatePassword = () => {
+const updatePassword = (showAlert) => {
   let pw = $('#text-pw').val();
   let l = pw.length;
   // Change placeholder
@@ -515,7 +522,9 @@ const updatePassword = () => {
   }
   mask = new Uint8Array(dataArray);
   // Make alert
-  appendAlert("success", "Password applied & Reload all images");
+  if(showAlert !== false) {
+    appendAlert("success", "Password applied & Reload all images");
+  }
   reloadAllImageData();
 };
 
@@ -544,7 +553,7 @@ $(() => {
     }
   });
   // Init password
-  updatePassword();
+  updatePassword(false);
   // Load models
   loadAllModels();
   // Load gallery
