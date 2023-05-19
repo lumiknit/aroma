@@ -2,12 +2,23 @@ let mask = new Uint8Array();
 
 const appendAlert = (type, message) => {
   let html = `
-    <div class="alert alert-` + type + ` alert-dismissible mt-2 fade show" role="alert">
+    <div class="shadow alert alert-` + type + ` alert-dismissible mt-2 fade show" role="alert">
       ` + message + `
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   `;
   $('#alert-placeholder').append(html);
+};
+
+const formatDate = (date) => {
+  let d = new Date(date);
+  let y = "00" + d.getFullYear();
+  let m = "00" + (d.getMonth() + 1);
+  let day = "00" + d.getDate();
+  let h = "00" + d.getHours();
+  let min = "00" + d.getMinutes();
+  let s = "00" + d.getSeconds();
+  return y.substr(-2) + m.substr(-2) + day.substr(-2) + " " + h.substr(-2) + ":" + min.substr(-2) + ":" + s.substr(-2);
 };
 
 
@@ -241,12 +252,13 @@ const reload = () => {
       "txt2img": "primary",
       "highres_fix": "primary",
       "img2img": "primary",
+      "done": "success",
       "save_image": "info",
     };
-    status.removeClass("bg-danger bg-warning bg-primary bg-info");
-    const color = statusColor[data.name];
-    if(color === undefined) {
-      status.addClass("bg-secondary");
+    status.removeClass("bg-danger bg-warning bg-primary bg-info bg-secondary bg-success");
+    let color = statusColor[data.name];
+    if(!color) {
+      color = "secondary";
     }
     status.addClass("bg-" + color);
     $('#state-details').text(JSON.stringify(data.values));
@@ -271,7 +283,7 @@ const reload = () => {
   $.get("/aroma-static/state/current_job.json", (data) => {
     let start_time = new Date(data.start_time);
     let elapsed = new Date() - start_time;
-    $('#state-started').text(start_time.toLocaleString());
+    $('#state-started').text(formatDate(start_time));
     $('#state-elapsed').text((elapsed / 1000).toFixed(1) + "s");
 
     // Load default values

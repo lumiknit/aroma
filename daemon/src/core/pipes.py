@@ -209,6 +209,7 @@ class SDPipes:
         values = state.values
         params = values['params']
 
+        state.write_state("setup_params", {})
         kwargs = {}
 
         # Check params and generate
@@ -218,9 +219,11 @@ class SDPipes:
         kwargs['guidance_scale'] = params['cfg_scale']
 
         # Change sampling method
+        state.write_state("update_sampler", {})
         self._update_sampling_method(params['sampling_method'])
         
         # Generate
+        state.write_state("start_generate", {})
         total_steps = int(params['sampling_steps'])
         def callback(step, timestep, latents):
             state.write_state("txt2img", {
@@ -248,6 +251,7 @@ class SDPipes:
                 result.images[0])
 
         # Return image
+        state.write_state("done", {})
         return result.images[0]
 
     def _txt2img_highres_fix(self, state, img):
@@ -257,6 +261,7 @@ class SDPipes:
 
         for c, hf in enumerate(highres_fix):
             print(f"[INFO] SDPipes: highres_fix - {c}")
+            state.write_state("setup_highres_params", {})
             # Get Size
             hf_width = filter_image_size(hf['width'])
             hf_height = filter_image_size(hf['height'])
@@ -269,6 +274,7 @@ class SDPipes:
             kwargs['strength'] = hf['strength']
             
             # Generation
+            state.write_state("start_highres_fix", {})
             total_steps = int(params['sampling_steps'] * hf['strength'])
             def callback(step, timestep, latents):
                 state.write_state("highres_fix", {
@@ -289,6 +295,7 @@ class SDPipes:
             )
             callback(total_steps, 0, None)
             img = result.images[0]
+        state.write_state("done", {})
         return img
 
     def text_to_image(self, state):

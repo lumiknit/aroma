@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="/static/css/bootstrap.min.css">
 </head>
 <body>
+  <!-- Alert -->
+  <div id="alert-placeholder" style="position: fixed; bottom: 4vh; margin: auto; width: 100vw; z-index:9999; padding: 0 5vw;">
+
+  </div>
   <!-------------------------------------------------------------->
   <!-- Nav Bar-->
   <nav class="navbar sticky-top navbar-expand-sm navbar-dark bg-dark justify-content-between">
@@ -41,10 +45,6 @@
     </div>
   </nav>
 
-  <!-- Alert -->
-  <div id="alert-placeholder" class="container">
-
-  </div>
     
   <!-- Controller -->
   <div class="container">
@@ -172,7 +172,7 @@
           <div id="state-progress" class="progress-bar progress-bar-striped" role="progressbar" style="width: 10%"></div>
         </div>
         <div> <b> Started(Elapsed) </b> <span id="state-started"></span>(<span id="state-elapsed"></span>)</div>
-        <div> <b> Last File(Elapsed) </b> <span id="state-last-file"></span>(<span id="state-last-elapsed"></span>)</div>
+        <div> <b> Last(Elapsed) </b> <span id="state-last-file"></span>(<span id="state-last-elapsed"></span>)</div>
       </div>
     </div>
   </div>
