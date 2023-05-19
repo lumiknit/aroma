@@ -6,7 +6,8 @@ Simple diffuser daemon with utilities and web UI.
 
 This is a user to
 - use huggingface/diffusers
-- need txt2img loops running on local
+- need txt2img loops running on local (especially with MPS)
+  - or colab
 - with (some naive but maybe useful) features
   - prompt weights as WebUI syntax using `()[](:weight)`
   - multistep highres fix
@@ -14,7 +15,9 @@ This is a user to
 
 ## Usage (Colab)
 
-See aroma.ipynb
+See aroma.ipynb.
+
+Note that you need ngrok to export web ui. Consider to set basic auth username & password & daemon password not to other person steal your GPU token and images!
 
 ## Usage (Local)
 
@@ -65,7 +68,4 @@ You can
 
 ## TODO
 
-- Fix unknown delay during prompt embed
-  - Occur during forward
 - When model changed, clean cache on GPU
-- Remove verbose timestep in generation status
