@@ -67,9 +67,5 @@ You can
 
 - Fix unknown delay during prompt embed
   - Occur during forward
-- Add imageviewer
 - When model changed, clean cache on GPU
-- Remove verbose alert (First launche)
-- Fix empty background for unknown status
 - Remove verbose timestep in generation status
-- Improve sampler steps UI
