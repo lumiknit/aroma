@@ -44,6 +44,13 @@ class SDPipes:
             kwargs['revision'] = revision
         if variant is not None:
             kwargs['variant'] = variant
+
+        # Remove old model
+        if self.txt2img is not None:
+            del self.txt2img
+            # Clean cuda cache
+            if torch_device() == 'cuda':
+                torch.cuda.empty_cache()
         
         # Create txt2img pipeline
         print(f"[INFO] Loading pipeline from {path}")
@@ -56,6 +63,9 @@ class SDPipes:
         if txt2img is None:
             raise Exception("Failed to load model")
 
+        # Disable safety checker for performance
+        txt2img.safety_checker = None
+
         # Load Textual Inversion
         for inv in state.values['textual_inversions']:
             txt2img.load_textual_inversion(
@@ -63,6 +73,7 @@ class SDPipes:
                 weight_name=inv,
             )
 
+        # Send to device
         txt2img = txt2img.to(torch_device())
         
         txt2img.scheduler = DPMSolverMultistepScheduler.from_config(txt2img.scheduler.config)
@@ -71,11 +82,8 @@ class SDPipes:
 
         print(f"[INFO] Set-up pipeline")
 
-        # Disable safety checker for performance
-        txt2img.safety_checker = None
-
         # Enable memory efficient options
-        #txt2img.enable_attention_slicing(slice_size='auto')
+        txt2img.enable_attention_slicing(slice_size='auto')
         #txt2img.enable_vae_slicing()
         #txt2img.enable_vae_tiling()
 
@@ -103,7 +111,6 @@ class SDPipes:
             feature_extractor=txt2img.feature_extractor,
             requires_safety_checker=False,
         ).to(torch_device())
-
         
         # Done, update variables
         self.model_path = path
