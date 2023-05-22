@@ -21,7 +21,7 @@
       "sampling_method": "Default",
       "sampling_steps": 25,
       "cfg_scale": 8,
-      "prompt": "masterpiece, knight",
+      "prompt": "cat",
       "negative_prompt": "EasyNegative, nsfw, worst quality, low quality",
       "highres_fix": [
         {

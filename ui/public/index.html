@@ -29,6 +29,9 @@
             <a class="nav-link" href="#" onclick="window.scrollTo(0, 0)">Top</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link" href="models.html">Models</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link" href="archives.html">Archives</a>
           </li>
           <li class="nav-item">
@@ -75,7 +78,6 @@
     <div class="card mt-2">
       <h5 class="card-header d-flex align-items-center justify-content-between">
         Config
-        <button type="button" class="btn btn-sm btn-outline-primary" onclick="applyConfig()">Apply Config</button>
       </h5>
       <div class="card-body container p-2">
         <!-- Setting -->  
@@ -157,6 +159,11 @@
           <div class="input-group">
             <span class="input-group-text"> etc </span>
             <textarea class="form-control font-monospace" id="config-other" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <button type="button" class="btn btn-block w-100 btn-primary" onclick="applyConfig()">Apply Config</button>
           </div>
         </div>
       </div>
