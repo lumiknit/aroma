@@ -14,6 +14,7 @@ dependencies:
 - ftfy
 - pip
 - pip:
+  - huggingface_hub
   - transformers
   - diffusers==0.16.1
   - accelerate==0.18.0

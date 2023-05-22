@@ -68,4 +68,5 @@ You can
 
 ## TODO
 
-- When model changed, clean cache on GPU
+- Load configuration from last started job
+- Add model download page
