@@ -1,13 +1,22 @@
 let mask = new Uint8Array();
 
+let alert_id = 0;
 const appendAlert = (type, message) => {
+  alert_id++;
   let html = `
-    <div class="shadow alert alert-` + type + ` alert-dismissible mt-2 fade show" role="alert">
+    <div id="a-alert-` + alert_id + `" class="shadow alert alert-` + type + ` alert-dismissible mt-2 fade show" role="alert">
       ` + message + `
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   `;
   $('#alert-placeholder').append(html);
+  let delay = 5000;
+  if(type === "success") {
+    delay = 2000;
+  }
+  setTimeout(() => {
+    $('#a-alert-' + alert_id).alert('close');
+  }, delay);
 };
 
 const formatDate = (date) => {
@@ -241,82 +250,122 @@ const pushImage = (name) => {
   return true;
 };
 
-const reload = () => {
-  // Load current state
-  $.get("/aroma-static/state/state.json", (data) => {
-    let status = $('#state-status');
-    status.text(data.name);
-    const statusColor = {
-      "load_model": "danger",
-      "update_prompt": "warning",
-      "txt2img": "primary",
-      "highres_fix": "primary",
-      "img2img": "primary",
-      "done": "success",
-      "save_image": "info",
-      "error": "danger",
-    };
-    status.removeClass("bg-danger bg-warning bg-primary bg-info bg-secondary bg-success");
-    let color = statusColor[data.name];
-    if(!color) {
-      color = "secondary";
-    }
-    status.addClass("bg-" + color);
-    $('#state-details').text(JSON.stringify(data.values));
-    // Check it is progress
-    let progress = $('#state-progress');
-    if(typeof data.values.step === "number"
-        && typeof data.values.total_steps === "number") {
-      // Update progress bar
-      percentage = 100 * data.values.step / data.values.total_steps;
-      text = "" + data.values.step + "/" + data.values.total_steps;
-      progress.addClass("progress-bar-striped progress-bar-animated");
-      progress.css("width", percentage + "%").text(text);
-    } else {
-      // Set to full progress
-      progress.removeClass("progress-bar-striped progress-bar-animated");
-      progress
-        .css("width", "100%")
-        .text("--/--");
-    }
-  });
-  // Load current job
-  $.get("/aroma-static/state/current_job.json", (data) => {
-    let start_time = new Date(data.start_time);
-    let elapsed = new Date() - start_time;
-    $('#state-started').text(formatDate(start_time));
-    $('#state-elapsed').text((elapsed / 1000).toFixed(1) + "s");
+const updatePWIndicator = (passed) => {
+  let indicator = $('#pw-indicator');
+  let marker = indicator.text().trim()
+  if(passed && marker === "X") {
+    indicator.removeClass('bg-danger');
+    indicator.addClass('bg-success');
+    indicator.text("O");
+  } else if(!passed && marker === "O") {
+    indicator.removeClass('bg-success');
+    indicator.addClass('bg-danger');
+    indicator.text("X");
+  }
+};
 
-    // Load default values
-    if(data.values !== undefined) {
-      if(data.values.model !== undefined) {
-        $('#config-model-path').attr("placeholder", data.values.model.path);
+const reload = () => {
+  if(!document.hidden) {
+    // Load current state
+    $.get("/aroma-static/state/state.json", (data) => {
+      try {
+        data = JSON.parse(aromaDecode(mask, data));
+        updatePWIndicator(true);
+      } catch(e) {
+        // Maybe password failed
+        updatePWIndicator(false);
+        return;
       }
-      if(data.values.params !== undefined) {
-        let new_text = "Current: " + data.values.params.sampling_method;
-        if($('#config-sampling-method-current').text() !== new_text) {
-          $('#config-sampling-method-current').text(new_text);
+      let status = $('#state-status');
+      status.text(data.name);
+      const statusColor = {
+        "load_model": "danger",
+        "update_prompt": "warning",
+        "txt2img": "primary",
+        "highres_fix": "primary",
+        "img2img": "primary",
+        "done": "success",
+        "save_image": "info",
+        "error": "danger",
+      };
+      status.removeClass("bg-danger bg-warning bg-primary bg-info bg-secondary bg-success");
+      let color = statusColor[data.name];
+      if(!color) {
+        color = "secondary";
+      }
+      status.addClass("bg-" + color);
+      $('#state-details').text(JSON.stringify(data.values));
+      // Check it is progress
+      let progress = $('#state-progress');
+      if(typeof data.values.step === "number"
+          && typeof data.values.total_steps === "number") {
+        // Update progress bar
+        percentage = 100 * data.values.step / data.values.total_steps;
+        text = "" + data.values.step + "/" + data.values.total_steps;
+        progress.addClass("progress-bar-striped progress-bar-animated");
+        progress.css("width", percentage + "%").text(text);
+      } else {
+        // Set to full progress
+        progress.removeClass("progress-bar-striped progress-bar-animated");
+        progress
+          .css("width", "100%")
+          .text("--/--");
+      }
+    });
+    // Load current job
+    $.get("/aroma-static/state/current_job.json", (data) => {
+      try {
+        data = JSON.parse(aromaDecode(mask, data));
+        updatePWIndicator(true);
+      } catch(e) {
+        // Maybe password failed
+        return;
+      }
+      let start_time = new Date(data.start_time);
+      let elapsed = new Date() - start_time;
+      $('#state-started').text(formatDate(start_time));
+      $('#state-elapsed').text((elapsed / 1000).toFixed(1) + "s");
+
+      // Load default values
+      if(data.values !== undefined) {
+        if(data.values.model !== undefined) {
+          $('#config-model-path').attr("placeholder", data.values.model.path);
         }
-        $('#config-sampling-steps').attr("placeholder", data.values.params.sampling_steps);
-        $('#config-cfg-scale').attr("placeholder", data.values.params.cfg_scale);
-        $('#config-width').attr("placeholder", data.values.params.width);
-        $('#config-height').attr("placeholder", data.values.params.height);
-        $('#config-prompt').attr("placeholder", data.values.params.prompt);
-        $('#config-negative-prompt').attr("placeholder", data.values.params.negative_prompt);
-        let cloned = JSON.parse(JSON.stringify(data.values.params));
-        delete cloned.sampling_method;
-        delete cloned.sampling_steps;
-        delete cloned.cfg_scale;
-        delete cloned.width;
-        delete cloned.height;
-        delete cloned.prompt;
-        delete cloned.negative_prompt;
-        $('#config-other').attr("placeholder", JSON.stringify(cloned));
+        if(data.values.params !== undefined) {
+          let new_text = "Current: " + data.values.params.sampling_method;
+          if($('#config-sampling-method-current').text() !== new_text) {
+            $('#config-sampling-method-current').text(new_text);
+          }
+          $('#config-sampling-steps').attr("placeholder", data.values.params.sampling_steps);
+          $('#config-cfg-scale').attr("placeholder", data.values.params.cfg_scale);
+          $('#config-width').attr("placeholder", data.values.params.width);
+          $('#config-height').attr("placeholder", data.values.params.height);
+          $('#config-prompt').attr("placeholder", data.values.params.prompt);
+          $('#config-negative-prompt').attr("placeholder", data.values.params.negative_prompt);
+          let cloned = JSON.parse(JSON.stringify(data.values.params));
+          delete cloned.sampling_method;
+          delete cloned.sampling_steps;
+          delete cloned.cfg_scale;
+          delete cloned.width;
+          delete cloned.height;
+          delete cloned.prompt;
+          delete cloned.negative_prompt;
+          $('#config-other').attr("placeholder", JSON.stringify(cloned));
+        }
       }
-    }
-  });
+    });
+  }
   // Load last job
+  // It must be run in background because it'll add image to gallery
   $.get("/aroma-static/state/last_job.json", (data) => {
+    try {
+      data = JSON.parse(aromaDecode(mask, data));
+      updatePWIndicator(true);
+    } catch(e) {
+      // Maybe password failed
+      updatePWIndicator(false);
+      return;
+    }
     let start_time = new Date(data.start_time);
     let end_time = new Date(data.end_time);
     let elapsed = end_time - start_time;
@@ -383,6 +432,7 @@ const applyConfig = () => {
     model: {},
     params: {}
   };
+  let changed = [];
   try {
     let text = $('#config-other').val().trim();
     if(text.length > 0) {
@@ -396,6 +446,7 @@ const applyConfig = () => {
   let sm = $('#config-sampling-method').val().trim();
   if(sm.length > 0 && sm !== "Default") {
     values.params.sampling_method = sm;
+    changed.push("sampling_method");
   }
   // Read sampling steps
   let ss = $('#config-sampling-steps').val().trim();
@@ -406,6 +457,7 @@ const applyConfig = () => {
       return;
     }
     values.params.sampling_steps = sampling_steps;
+    changed.push("sampling_steps");
   }
   // Read cfg scale
   let cs = $('#config-cfg-scale').val().trim();
@@ -416,6 +468,7 @@ const applyConfig = () => {
       return;
     }
     values.params.cfg_scale = cfg_scale;
+    changed.push("cfg_scale");
   }
   // Read width
   let w = $('#config-width').val().trim();
@@ -426,6 +479,7 @@ const applyConfig = () => {
       return;
     }
     values.params.width = width;
+    changed.push("width");
   }
   // Read height
   let h = $('#config-height').val().trim();
@@ -436,31 +490,37 @@ const applyConfig = () => {
       return;
     }
     values.params.height = height;
+    changed.push("height");
   }
   // Read prompt
   let p = $('#config-prompt').val().trim();
   if(p.length > 0) {
     values.params.prompt = p;
+    changed.push("prompt");
   }
   // Read negative prompt
   let np = $('#config-negative-prompt').val().trim();
   if(np.length > 0) {
     values.params.negative_prompt = np;
+    changed.push("negative");
   }
   // Read model path
   let mp = $('#config-model-path').val().trim();
   if(mp.length > 0) {
     values.model.path = mp;
+    changed.push("model_path");
   }
+  // Encode
+  let encoded = JSON.stringify(values);
+  encoded = aromaEncode(mask, encoded);
   // Send request
   $.ajax({
     url: "/api/values",
     type: "PUT",
-    data: JSON.stringify(values),
+    data: encoded,
     contentType: "application/json",
     async: true,
     success: (data) => {
-      appendAlert("success", "Updated!");
       // Reset all fields
       $('#config-model-path').val("");
       $('#config-sampling-method').val("Default");
@@ -471,6 +531,7 @@ const applyConfig = () => {
       $('#config-prompt').val("");
       $('#config-negative-prompt').val("");
       $('#config-other').val("");
+      appendAlert("success", "Updated successfully: " + changed.join(", "));
     },
     error: (xhr, status, error) => {
       appendAlert("danger", "Update request failed: " + error);
@@ -526,14 +587,7 @@ const updatePassword = (showAlert) => {
   // Reset field
   $('#text-pw').val("");
   // Add salt
-  pw = "-<f!-" + pw + "<8z.";
-  // SHA-512 encode
-  data = CryptoJS.SHA512(pw);
-  const dataArray = new Uint8Array(data.sigBytes);
-  for (let i = 0x0; i < data.sigBytes; i++) {
-    dataArray[i] = data.words[i >>> 0x2] >>> 0x18 - i % 0x4 * 0x8 & 0xff;
-  }
-  mask = new Uint8Array(dataArray);
+  mask = makeMask(pw);
   // Make alert
   if(showAlert !== false) {
     appendAlert("success", "Password applied & Reload all images");
@@ -541,30 +595,39 @@ const updatePassword = (showAlert) => {
   reloadAllImageData();
 };
 
+const setUpEventHandlers = () => {
+  const textboxes = [
+    '#config-sampling-steps',
+    '#config-cfg-scale',
+    '#config-width',
+    '#config-height',
+    '#config-prompt',
+    '#config-negative-prompt',
+    '#config-other'
+  ];
+  // Set event handler
+  for(let tb of textboxes) {
+    ((id) => {
+      $(id).on('focus', () => {
+        c = $(id);
+        if(c.val() == "") {
+          c.val(c.attr("placeholder"));
+        }
+      });
+      $(id).on('blur', () => {
+        c = $(id);
+        if(c.val() == c.attr("placeholder")) {
+          c.val("");
+        }
+      });
+    })(tb);
+  }
+};
+
 // Init
 $(() => {
   // Set prompt loader
-  $('#config-prompt').on('focus', () => {
-    // If itself is empty, fill by placeholder
-    c = $('#config-prompt')
-    if(c.val() == "") {
-      c.val(c.attr("placeholder"));
-    }
-  });
-  $('#config-negative-prompt').on('focus', () => {
-    // If itself is empty, fill by placeholder
-    c = $('#config-negative-prompt')
-    if(c.val() == "") {
-      c.val(c.attr("placeholder"));
-    }
-  });
-  $('#config-other').on('focus', () => {
-    // If itself is empty, fill by placeholder
-    c = $('#config-other')
-    if(c.val() == "") {
-      c.val(c.attr("placeholder"));
-    }
-  });
+  setUpEventHandlers();
   // Init password
   updatePassword(false);
   // Load models

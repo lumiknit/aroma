@@ -6,6 +6,17 @@ import os
 from io import BytesIO
 
 
+def read_and_truncate_as(path, w=""):
+    with open(path, "r") as f:
+        # Read contents
+        r = f.read()
+    with open(path, "w") as f:
+        # Truncate
+        f.write(w)
+    return r
+
+
+
 def merge_dict(dst, src):
     for k in src:
         if k in dst and isinstance(dst[k], dict):
@@ -109,16 +120,10 @@ class State:
     def merge_from_file(self, path):
         # Read file
         try:
-            with open(path, "r") as f:
-                # Read contents
-                contents = f.read()
+            contents = read_and_truncate_as(path, "{}")
         except Exception as e:
-            print("[WARN] Failed to read file, do nothing")
-            print(e)
+            print(f"[WARN] Failed to read {path}, do nothing: {e}")
             return
-        with open(path, "w") as f:
-            # Truncate
-            f.write("{}")
         # Merge
         try:
             merge_dict(self.values, json.loads(contents))
@@ -126,8 +131,27 @@ class State:
             print("[WARN] Failed to merge dict, do nothing")
             print(e)
 
+    def merge_from_encoded_file(self, path):
+        # Read file
+        try:
+            contents = read_and_truncate_as(path, "")
+        except Exception as e:
+            print(f"[WARN] Failed to read {path}, do nothing: {e}")
+            return
+        # Loop by line
+        for line in contents.split("\n"):
+            # Decode line and merge
+            try:
+                line = aroma_decode(self.mask, line)
+                j = json.loads(line)
+                merge_dict(self.values, j)
+            except Exception as e:
+                print(f"[WARN] Failed to decode line, skip: {e}")
+                continue
+
     def merge_values(self):
-        return self.merge_from_file(f"{self.state_root}/values.json")
+        self.merge_from_file(f"{self.state_root}/values.json")
+        self.merge_from_encoded_file(f"{self.state_root}/values.as")
 
     def save_values(self, path):
         with open(path, "w") as f:
