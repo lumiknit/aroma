@@ -108,9 +108,14 @@ class State:
 
     def merge_from_file(self, path):
         # Read file
-        with open(path, "r") as f:
-            # Read contents
-            contents = f.read()
+        try:
+            with open(path, "r") as f:
+                # Read contents
+                contents = f.read()
+        except Exception as e:
+            print("[WARN] Failed to read file, do nothing")
+            print(e)
+            return
         with open(path, "w") as f:
             # Truncate
             f.write("{}")
