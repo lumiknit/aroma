@@ -69,4 +69,3 @@ You can
 ## TODO
 
 - Load configuration from last started job
-- Add model download page
