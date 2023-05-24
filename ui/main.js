@@ -177,7 +177,12 @@ app.put('/api/values', (req, res) => {
       return;
     }
     // Read current values
-    let values = await fs.promises.readFile(state_path + "/values.json", 'utf8');
+    let values = "{}";
+    try {
+      await fs.promises.readFile(state_path + "/values.json", 'utf8');
+    } catch(e) {
+      console.log("Failed to read values.json. Use empty one");
+    }
     // Try to parse
     try {
       let parsed = JSON.parse(values);
