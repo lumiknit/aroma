@@ -394,7 +394,7 @@ const applyConfig = () => {
   }
   // Read sampling method
   let sm = $('#config-sampling-method').val().trim();
-  if(sm.length > 0) {
+  if(sm.length > 0 && sm !== "Default") {
     values.params.sampling_method = sm;
   }
   // Read sampling steps

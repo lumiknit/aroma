@@ -2,6 +2,7 @@ import datetime
 import json
 import base64
 import gzip
+import os
 from io import BytesIO
 
 
@@ -89,6 +90,21 @@ class State:
             with open(path, "r") as f:
                 merge_dict(d, json.load(f))
         return cls(d)
+    
+    def merge_current_job(self):
+        # Check if current job exists
+        p = f"{self.state_root}/current_job.json"
+        if not os.path.exists(p):
+            return
+        # Read current job
+        try:
+            with open(p, "r") as f:
+                job = json.load(f)
+                merge_dict(self.values, job["values"])
+        except Exception as e:
+            print("[WARN] Failed to load current job, do nothing")
+            print(e)
+            return
 
     def merge_from_file(self, path):
         # Read file

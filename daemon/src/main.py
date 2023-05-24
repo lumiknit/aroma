@@ -11,6 +11,8 @@ state = State.init_from_config_files(
         "config.json",
     ]
 )
+state.merge_current_job()
+
 
 pipes = SDPipes()
 

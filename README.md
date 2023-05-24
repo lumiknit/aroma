@@ -1,21 +1,21 @@
 # aroma
 
-Note: It's a kind of toy project to test diffusers library and play with img gen on the local device. I have no idea to improve performance/UI/UX yet.
-
 Simple diffuser daemon with utilities and web UI.
 
-This is a user to
-- use huggingface/diffusers
-- need txt2img loops running on local (especially with MPS)
-  - or colab
-- with (some naive but maybe useful) features
+This is for users who
+- use huggingface/diffusers library & models
+- need txt2img loops running on local (especially with MPS) or colab
+- need (some naive but maybe useful) features
   - prompt weights as WebUI syntax using `()[](:weight)`
   - multistep highres fix
+  - textual inversions
 - and need simple UI
+  - bootstrap5
+  - gallery
 
 ## Usage (Colab)
 
-See aroma.ipynb.
+See aroma.ipynb. It'll configurate environment and run WebUI.
 
 Note that you need ngrok to export web ui. Consider to set basic auth username & password & daemon password not to other person steal your GPU token and images!
 
@@ -24,13 +24,14 @@ Note that you need ngrok to export web ui. Consider to set basic auth username &
 ### Requirements
 
 - Bash
-- Conda/Mamba/Micromamba
+- Micromamba/Mamba/Conda (mamba is recommended)
 - (For web UI) nodejs & npm
-- Models for diffusers
+- Models converted for diffusers library
 
 ### Preparation
 
 - Create `./archives`, `./models`, `./outputs`, `./state` directories
+  - touch `./state/value.json`
 - Link or put SD models in `models` directory
 - Modify `config.json` for init configuration
 - If you want to launch only daemon, use `./daemon/run.sh`
@@ -49,6 +50,9 @@ Note that you need ngrok to export web ui. Consider to set basic auth username &
 
 ### Daemon
 
+Daemon will automatically run txt2img repeatedly without any rests.
+You can communicate with daemon using files in `state` directory.
+
 ### WebUI
 
 ![preview](https://raw.githubusercontent.com/lumiknit/aroma/main/ui-preview.webp)
@@ -58,6 +62,7 @@ You can
 - Change configuration for next generation
 - See images in simple masonry? gallery
 - Delete uneccesary images and archive them
+- Download some models from huggingface.co
 - Add archive ddownload page
 
 ## Notes
@@ -68,4 +73,3 @@ You can
 
 ## TODO
 
-- Load configuration from last started job
