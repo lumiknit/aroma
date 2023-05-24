@@ -1,5 +1,7 @@
 # aroma
 
+![aroma](https://raw.githubusercontent.com/lumiknit/aroma/main/aroma.webp)
+
 Simple diffuser daemon with utilities and web UI.
 
 This is for users who
