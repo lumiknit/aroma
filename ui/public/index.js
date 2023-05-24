@@ -39,13 +39,15 @@ const createCard = (imgName) => {
   let name = imgName.split(".")[0];
   let html = `
     <div id="card--` + name + `" class="card mt-2">
-      <button type="button" class="card-header bg-secondary btn btn-sm btn-secondary p-1" data-bs-toggle="collapse" data-bs-target="#card-collapse--` + name + `" aria-expanded="false" aria-controls="card-collapse--` + name + `" title="Click to open details"> <div class="text-truncate" style="font-size: 0.5em;">` + name + `</div> </button>
+      <button type="button" class="card-header bg-dark btn btn-sm btn-dark p-1" data-bs-toggle="collapse" data-bs-target="#card-collapse--` + name + `" aria-expanded="false" aria-controls="card-collapse--` + name + `" title="Click to open details"> <div class="text-truncate" style="font-size: 0.5em;">` + name + `</div> </button>
       <a href="javascript:openImageInNewTab('` + name + `')">
         <img id="card-img--` + name + `" class="card-img-top" alt="Not loaded, check password">
       </a>
       <div class="collapse" id="card-collapse--` + name + `">
         <div class="card-body">
-          <button class="btn btn-sm btn-outline-danger" onclick="deleteImage('` + imgName + `')">Delete</button>
+          <div id="card-btns--` + name + `">
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteImage('` + imgName + `')">Delete</button>
+          </div>
           <p class="font-monospace" style="font-size: 0.75em;">
             <small id="card-desc--` + name + `">
             </small>
@@ -121,7 +123,7 @@ const setupImageData = (name) => {
   // Update card
   img_v.attr("src", "data:image/" + img.a.image_format + ";base64," + img.a.image);
   desc.text(JSON.stringify(img.a.values));
-  desc.prepend($(`<button class="button btn-sm btn-outline-primary" onclick="reuseImageSettings('` + name + `')"> Reuse </button>`));
+  $("#card-btns--" + name).prepend($(`<button class="btn btn-sm btn-outline-primary" onclick="reuseImageSettings('` + name + `')"> Reuse </button>`));
 };
 
 const loadImageDataByName = (name) => {
@@ -404,25 +406,6 @@ const loadAllModels = () => {
     data.sort().forEach((model) => {
       list.append($(`<li><a class="dropdown-item" href="#" onclick="setModel('` + model + `')">` + model + `</a></li>`));
     });
-  });
-};
-
-const archiveOutputs = () => {
-  // Make confirm
-  if(!confirm("Warning: It will archive all outputs as .tar.gz and DELETE ALL FILES IN OUTPUTS directory.")) {
-    return;
-  }
-  // Send request
-  $.ajax({
-    url: "/api/outputs/archive",
-    type: "POST",
-    async: true,
-    success: (data) => {
-      appendAlert("success", "Archived! Please refresh the current page!");
-    },
-    error: (xhr, status, error) => {
-      appendAlert("danger", "Archive request failed: " + error);
-    }
   });
 };
 

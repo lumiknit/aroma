@@ -24,6 +24,25 @@ const loadArchives = () => {
   });
 };
 
+const archiveOutputs = () => {
+  // Make confirm
+  if(!confirm("Warning: It will archive all outputs as .tar.gz and DELETE ALL FILES IN OUTPUTS directory.")) {
+    return;
+  }
+  // Send request
+  $.ajax({
+    url: "/api/outputs/archive",
+    type: "POST",
+    async: true,
+    success: (data) => {
+      appendAlert("success", "Archived! Please refresh the current page!");
+    },
+    error: (xhr, status, error) => {
+      appendAlert("danger", "Archive request failed: " + error);
+    }
+  });
+};
+
 // Init
 $(() => {
   loadArchives();

@@ -83,6 +83,10 @@ app.use('/static', express.static(__dirname + "/public"));
 app.get('/aroma-static/state/:filename', async (req, res) => {
   let filename = req.params.filename;
   let fullpath = state_path + "/" + filename;
+  if(!fs.existsSync(fullpath)) {
+    res.status(404).send("Not found");
+    return;
+  }
   let data = await fs.promises.readFile(fullpath);
   // Encode
   let encoded = enc.aromaEncode(mask, data);
