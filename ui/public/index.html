@@ -56,23 +56,11 @@
       Put daemon password to get data from daemon.
     </small>
     <div class="input-group mb-2">
+      <span id="pw-indicator" class="input-group-text bg-success text-light fw-bold">O</span>
       <span class="input-group-text"> Daemon PW </span>
       <input type="text" id="text-pw" class="form-control" placeholder="">
       <button id="btn-pw" class="btn btn-danger" onclick="updatePassword()"> Update PW </button>
     </div>
-
-    <!-- Tools -->
-    <div class="card mt-2">
-      <h6 class="card-header d-flex align-items-center justify-content-between">
-        Tools
-      </h6>
-      <div class="card-body p-2">
-        <button type="button" class="btn btn-outline-danger" onclick="archiveOutputs()">
-          Archive and clean outputs
-        </button>
-      </div>
-    </div>
-    
 
     <!-- Config -->
     <div class="card mt-2">
@@ -144,13 +132,13 @@
         <div class="row mb-1 g-1">
           <div class="col-sm-12-sm col-md-6">
             <div class="input-group">
-              <span class="input-group-text text-white fw-bold bg-success"> + </span>
+              <span class="input-group-text text-light fw-bold bg-success"> + </span>
               <textarea class="form-control" id="config-prompt" rows="4"></textarea>
             </div>
           </div>
           <div class="col-sm-12 col-md-6">
             <div class="input-group">
-              <span class="input-group-text text-white fw-bold bg-danger"> - </span>
+              <span class="input-group-text text-light fw-bold bg-danger"> - </span>
               <textarea class="form-control" id="config-negative-prompt" rows="4"></textarea>
             </div>
           </div>

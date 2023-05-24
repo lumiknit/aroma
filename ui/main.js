@@ -4,6 +4,9 @@ const express = require('express');
 const path = require('path');
 const process = require('process');
 
+const enc = require(path.resolve( __dirname, "./public/js/enc.js" ));
+console.log(enc.aromaEncode(enc.makeMask("test"), "abc"));
+
 // Helpers
 
 const mergeObject = (dst, src) => {
@@ -53,6 +56,9 @@ console.log("       - archives_path: " + archives_path);
 const webui_host = config.webui.host;
 const webui_port = config.webui.port;
 
+const daemon_password = config.password;
+const mask = enc.makeMask(daemon_password);
+
 // Create each directory if not exists
 const createDirIfNotExists = (dir) => {
   if(!fs.existsSync(dir)) {
@@ -71,10 +77,21 @@ const app = express();
 // - Static files
 app.use('/aroma-static/archives/', express.static(archives_path));
 app.use('/aroma-static/outputs', express.static(outputs_path));
-app.use('/aroma-static/state', express.static(state_path, {
-  maxAge: 200,
-}));
 app.use('/static', express.static(__dirname + "/public"));
+
+// Status
+app.get('/aroma-static/state/:filename', async (req, res) => {
+  let filename = req.params.filename;
+  let fullpath = state_path + "/" + filename;
+  if(!fs.existsSync(fullpath)) {
+    res.status(404).send("Not found");
+    return;
+  }
+  let data = await fs.promises.readFile(fullpath);
+  // Encode
+  let encoded = enc.aromaEncode(mask, data);
+  res.send(encoded);
+});
 
 // - APIs
 
@@ -169,27 +186,39 @@ app.put('/api/values', (req, res) => {
   });
   req.on('end', async () => {
     console.log("[INFO] Received values: " + body);
+    var is_json = false;
     var json;
     try {
       json = JSON.parse(body);
+      is_json = true;
     } catch(e) {
-      res.status(400).send("Invalid JSON");
-      return;
     }
-    // Read current values
-    let values = await fs.promises.readFile(state_path + "/values.json", 'utf8');
-    // Try to parse
-    try {
-      let parsed = JSON.parse(values);
-      mergeObject(parsed, json);
-      values = JSON.stringify(parsed);
-    } catch(e) {
-      // If cannot parse, just write
-      values = JSON.stringify(json);
+    if(is_json) {
+      // Read current values
+      let values = "{}";
+      try {
+        await fs.promises.readFile(state_path + "/values.json", 'utf8');
+      } catch(e) {
+        console.log("Failed to read values.json. Use empty one");
+      }
+      // Try to parse
+      try {
+        let parsed = JSON.parse(values);
+        mergeObject(parsed, json);
+        values = JSON.stringify(parsed);
+      } catch(e) {
+        // If cannot parse, just write
+        values = JSON.stringify(json);
+      }
+      // Write to file
+      await fs.promises.writeFile(state_path + "/values.json", values);
+      res.send("OK");
+    } else {
+      // Otherwise, just append to values after strip
+      body = body.trim();
+      await fs.promises.appendFile(state_path + "/values.as", body + "\n");
+      res.send("OK");
     }
-    // Write to file
-    await fs.promises.writeFile(state_path + "/values.json", values);
-    res.send("OK");
   });
 });
 

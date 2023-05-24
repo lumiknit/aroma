@@ -282,8 +282,14 @@ class SDPipes:
             print(f"[INFO] SDPipes: highres_fix - {c}")
             state.write_state("setup_highres_params", {})
             # Get Size
-            hf_width = filter_image_size(hf["width"])
-            hf_height = filter_image_size(hf["height"])
+            if "scale" in hf:
+                hf_scale = float(hf["scale"])
+                hf_scale = min(max(hf_scale, 0.1), 10.0)
+                hf_width = int(img.width * hf_scale)
+                hf_height = int(img.height * hf_scale)
+            else:
+                hf_width = filter_image_size(hf["width"])
+                hf_height = filter_image_size(hf["height"])
             # Resize
             img = img.resize((hf_width, hf_height), PIL.Image.LANCZOS)
 

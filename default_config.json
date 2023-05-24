@@ -20,8 +20,7 @@
       "negative_prompt": "EasyNegative, nsfw, worst quality, low quality",
       "highres_fix": [
         {
-          "width": 480,
-          "height": 720,
+          "scale": 1.2,
           "strength": 0.6
         }
       ]

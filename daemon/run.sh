@@ -21,13 +21,13 @@ echo "       Run: python $SCRIPTPATH/src/main.py $@"
 
 _int() {
   echo "Caught SIGINT signal!"
-  kill -INT "$child" 2>/dev/null
+  kill -HUP "$child" 2>/dev/null
 }
 trap _int SIGINT
 
 _term() {
   echo "Caught SIGTERM signal!"
-  kill -TERM "$child" 2>/dev/null
+  kill -HUP "$child" 2>/dev/null
 }
 trap _term SIGTERM
 
@@ -41,4 +41,5 @@ trap _hup SIGHUP
 
 python $SCRIPTPATH/src/main.py $@ &
 child=$!
+echo "[INFO] Child process PID: $child"
 wait "$child"

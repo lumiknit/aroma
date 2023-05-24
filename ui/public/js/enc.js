@@ -1,3 +1,10 @@
+if(pako === undefined) {
+  var pako = require('pako');
+}
+if(CryptoJS === undefined) {
+  var CryptoJS = require('crypto-js');
+}
+
 // Array of bytes to Base64 string decoding
 function b64ToUint6(nChr) {
   return nChr > 64 && nChr < 91
@@ -132,3 +139,22 @@ const aromaDecode = (mask, str) => {
   // Convert Uint8Array to string
   return new TextDecoder().decode(s);
 };
+
+const makeMask = (pw) => {
+  pw = "-<f!-" + pw + "<8z.";
+  // SHA-512 encode
+  let data = CryptoJS.SHA512(pw);
+  const dataArray = new Uint8Array(data.sigBytes);
+  for (let i = 0x0; i < data.sigBytes; i++) {
+    dataArray[i] = data.words[i >>> 0x2] >>> 0x18 - i % 0x4 * 0x8 & 0xff;
+  }
+  return new Uint8Array(dataArray);
+};
+
+if(typeof module !== 'undefined') {
+  module.exports = {
+    aromaEncode: aromaEncode,
+    aromaDecode: aromaDecode,
+    makeMask: makeMask,
+  }
+}
