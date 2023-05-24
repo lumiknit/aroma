@@ -254,6 +254,7 @@ const reload = () => {
       "img2img": "primary",
       "done": "success",
       "save_image": "info",
+      "error": "danger",
     };
     status.removeClass("bg-danger bg-warning bg-primary bg-info bg-secondary bg-success");
     let color = statusColor[data.name];

@@ -8,13 +8,8 @@
   "save_raw": false,
   "init_values": {
     "model": {
-      "path": "extracted/anything-v4.5",
-      "revision": null,
-      "variant": null
+      "path": ""
     },
-    "textual_inversions": [
-      "EasyNegative.safetensors"
-    ],
     "params": {
       "width": 280,
       "height": 420,

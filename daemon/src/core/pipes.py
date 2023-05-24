@@ -1,5 +1,8 @@
 import datetime
+import re
 import json
+import os
+import pathlib
 from packaging.version import Version
 
 import torch
@@ -23,8 +26,6 @@ def filter_image_size(len):
 class SDPipes:
     def __init__(self):
         self.model_path = None
-        self.model_revision = None
-        self.model_variant = None
 
         self.prompt = Prompt(".")
         self.negative_prompt = Prompt(".")
@@ -34,14 +35,10 @@ class SDPipes:
         self.img2img = None
 
     def _load_model(
-        self, state, path, revision=None, variant=None, dtype=torch.float16
+        self, state, path, dtype=torch.float16
     ):
         # Create kwargs
         kwargs = {}
-        if revision is not None:
-            kwargs["revision"] = revision
-        if variant is not None:
-            kwargs["variant"] = variant
 
         # Remove old model
         if self.txt2img is not None:
@@ -53,23 +50,37 @@ class SDPipes:
         # Create txt2img pipeline
         print(f"[INFO] Loading pipeline from {path}")
         print(f"       kwargs = {kwargs}")
-        txt2img = DiffusionPipeline.from_pretrained(
-            path,
-            **kwargs,
-            torch_dtype=dtype,
-        )
-        if txt2img is None:
-            raise Exception("Failed to load model")
+        try:
+            txt2img = DiffusionPipeline.from_pretrained(
+                path,
+                **kwargs,
+                torch_dtype=dtype,
+            )
+        except Exception as e:
+            print(f"[ERROR] Cannot load model {path}: {e}")
+            raise Exception(f"Cannot load model {path}, please check selected model")
 
         # Disable safety checker for performance
         txt2img.safety_checker = None
 
         # Load Textual Inversion
-        for inv in state.values["textual_inversions"]:
-            txt2img.load_textual_inversion(
-                state.models_root,
-                weight_name=inv,
-            )
+        for (root, dirs, files) in os.walk(state.models_root):
+            print(root)
+            # Check if root is textual inversion root
+            base = os.path.basename(root)
+            base.lower()
+            base = re.sub("[^a-z0-9]+", "", base)
+            if base == "textualinversion" or base == "textualinversions":
+                print(f"[INFO] Found textual inversion root {root}")
+                for f in files:
+                    ti_path = os.path.join(root, f)
+                    if ti_path.endswith('.pt') or ti_path.endswith('.safetensors'):
+                        token = pathlib.Path(ti_path).stem
+                        print(f"[INFO] Loading textual inversion from {path} as {token}")
+                        txt2img.load_textual_inversion(
+                            ti_path,
+                            token=token,
+                        )
 
         # Send to device
         txt2img = txt2img.to(torch_device())
@@ -118,8 +129,6 @@ class SDPipes:
 
         # Done, update variables
         self.model_path = path
-        self.model_revision = revision
-        self.model_variant = variant
         self.txt2img = txt2img
         self.img2img = img2img
         self.default_scheduler = txt2img.scheduler
@@ -131,8 +140,6 @@ class SDPipes:
         self._load_model(
             state,
             f"{state.models_root}/{values['model']['path']}",
-            revision=values["model"]["revision"],
-            variant=values["model"]["variant"],
         )
         return self._txt2img_update_prompt(state)
 
@@ -318,11 +325,9 @@ class SDPipes:
         values = state.values
         params = values["params"]
         # If model changed, run from reload model
-        if (
-            self.model_path != f"{state.models_root}/{values['model']['path']}"
-            or self.model_revision != values["model"]["revision"]
-            or self.model_variant != values["model"]["variant"]
-        ):
+        print(f"A: {self.model_path}")
+        print(f"B: {state.models_root}/{values['model']['path']}")
+        if self.model_path != f"{state.models_root}/{values['model']['path']}":
             return self._txt2img_load_model(state)
         # If prompt changed, run from update embedding of model
         if (
