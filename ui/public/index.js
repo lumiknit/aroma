@@ -574,7 +574,7 @@ $(() => {
   setInterval(() => {
     reload();
     updateDaemonStatus();
-  }, 517);
+  }, 364);
 
   // Set QR
   $('#qr-link').attr("href", "qr.html?text=" + encodeURI(window.location.href));

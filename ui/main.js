@@ -305,6 +305,69 @@ app.get('/api/daemon/outputs', (req, res) => {
   res.send(daemon_outputs);
 });
 
+
+// Download Model
+let download_ps = [];
+
+// New model download
+app.post('/api/download-model', (req, res) => {
+  // Parse body as JSON
+  let body = "";
+  req.on('data', (chunk) => {
+    body += chunk.toString();
+  });
+  req.on('end', async () => {
+    console.log("[INFO] Received model: " + body);
+    var json;
+    try {
+      json = JSON.parse(body);
+    } catch(e) {
+      res.status(400).send("Invalid JSON");
+      return;
+    }
+    const repo_id = json.repo_id;
+    const subdir = json.subdir;
+    // Create process
+    let out_path = models_path + "/" + repo_id;
+    let ps = child_process.spawn(
+      "bash", ["daemon/download-hf-snapshot.sh", out_path, repo_id, subdir]);
+    let obj = {
+      repo_id: repo_id,
+      subdir: subdir,
+      ps: ps,
+      out: "",
+    };
+    // Add to download ps
+    download_ps.push(obj);
+    ps.stdout.on('data', (data) => {
+      obj.out += data.toString();
+    });
+    ps.stderr.on('data', (data) => {
+      obj.out += data.toString();
+    });
+    ps.on('exit', (code) => {
+      // Remove from download ps
+      console.log("[INFO] Downloading model: Done (" + repo_id + ", " + subdir + ")");
+      download_ps = download_ps.filter((x) => x["repo_id"] != repo_id || x["subdir"] != subdir);
+    });
+    res.send("OK");
+  });
+});
+
+// Get download status
+app.get('/api/download-model', (req, res) => {
+  let lst = [];
+  for(let obj of download_ps) {
+    lst.push({
+      repo_id: obj["repo_id"],
+      subdir: obj["subdir"],
+      out: obj["out"].slice(-200),
+    });
+  }
+  res.send(JSON.stringify(lst));
+});
+
+
 // Open server with random port
 let server = app.listen(webui_port, webui_host, () => {
   console.log("[INFO] - Open http://" + server.address().address + ":" + server.address().port + "/ in your browser")

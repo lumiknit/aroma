@@ -48,6 +48,84 @@
     </div>
   </nav>
 
+  <!-- Main -->
+  <div class="container">
+    <!-- List -->
+    <div class="card mt-2">
+      <h5 class="card-header d-flex align-items-center justify-content-between">
+        Models (Refresh page to update)
+      </h5>
+      <div class="card-body">
+        <div id="model-list" class="row">
+        </div>
+      </div>
+    </div>
+    
+    <!-- Download box -->
+    <div class="card mt-2">
+      <h5 class="card-header d-flex align-items-center justify-content-between">
+        Current Downloading Model
+      </h5>
+      <div class="card-body p-2">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th scope="col"> Repo ID </th>
+              <th scope="col"> Subdir </th>
+              <th scope="col"> Status </th>
+            </tr>
+          </thead>
+          <tbody id="download-tbody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Download box (preset) -->
+    <div class="card mt-2">
+      <h5 class="card-header d-flex align-items-center justify-content-between">
+        Download Model
+      </h5>
+      <div class="card-body p-2">
+        Repo ID: Huggingface Repo (organization/repo)
+        <div class="row mb-1 g-1">
+          <div class="col-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-text"> Repo ID </span>
+              <input type="text" step="1" id="dl-model-repo-id" class="form-control" placeholder="org/repo">
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-text"> Subdir </span>
+              <input type="text" step="1" id="dl-model-subdir" class="form-control" placeholder="model-a">
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <button type="button" class="btn btn-block w-100 btn-primary" onclick="downloadClick()"> Download </button>
+          </div>
+        </div>
+
+        <hr>
+        <h6> Presets </h6>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th scope="col"> # </th>
+              <th scope="col"> Repo ID </th>
+              <th scope="col"> Subdir </th>
+              <th scope="col"> Download </th>
+            </tr>
+          </thead>
+          <tbody id="preset-tbody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <script src="/static/js/jquery-3.6.4.min.js" type="text/javascript"></script>
   <script src="/static/js/popper.min.js" type="text/javascript"></script>
   <script src="/static/js/bootstrap.min.js" type="text/javascript"></script>
