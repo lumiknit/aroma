@@ -5,6 +5,7 @@ import os
 import pathlib
 from packaging.version import Version
 
+import numpy as np
 import torch
 from transformers import CLIPTextModel
 from diffusers import *
@@ -250,11 +251,43 @@ class SDPipes:
         state.write_state("setup_params", {})
         kwargs = {}
 
+
         # Check params and generate
-        kwargs["width"] = filter_image_size(params["width"])
-        kwargs["height"] = filter_image_size(params["height"])
         kwargs["num_inference_steps"] = params["sampling_steps"]
         kwargs["guidance_scale"] = params["cfg_scale"]
+
+        # Put size
+        w = int(params["width"])
+        h = int(params["height"])
+        try:
+            rng = float(params["size_range"])
+            if rng > 0:
+                dw = float(np.random.uniform(low=-rng, high=rng))
+                dh = float(np.random.uniform(low=-rng, high=rng))
+                w = int(w * (1 + dw))
+                h = int(h * (1 + dh))
+        except:
+            print("[WARNING] Invalid size range, ignore it.")
+        w = filter_image_size(w)
+        h = filter_image_size(h)
+
+        kwargs["width"] = w
+        kwargs["height"] = h
+
+        state.job["values"]["fixed_size"] = {
+            "w": w,
+            "h": h,
+        }
+
+        # If seed is given, use it
+        if params["seed"] != "":
+            try:
+                s = int(params["seed"])
+                kwargs["generator"] = [
+                    torch.Generator(device=torch_device()).manual_seed(s)
+                ]
+            except:
+                print("[WARNING] Invalid seed ignore it.")
 
         # Change sampling method
         state.write_state("update_sampler", {})

@@ -201,6 +201,8 @@ const reuseImageSettings = (name) => {
   $('#config-cfg-scale').val(config.config.params.cfg_scale);
   $('#config-width').val(config.config.params.width);
   $('#config-height').val(config.config.params.height);
+  $('#config-seed').val(config.config.params.seed);
+  $('#config-size-range').val(config.config.params.size_range);
   $('#config-prompt').val(config.config.params.prompt);
   $('#config-negative-prompt').val(config.config.params.negative_prompt);
   let cloned = JSON.parse(JSON.stringify(config.config.params));
@@ -370,6 +372,8 @@ const reload = () => {
           $('#config-cfg-scale').attr("placeholder", data.values.params.cfg_scale);
           $('#config-width').attr("placeholder", data.values.params.width);
           $('#config-height').attr("placeholder", data.values.params.height);
+          $('#config-seed').attr("placeholder", data.values.params.seed);
+          $('#config-size-range').attr("placeholder", data.values.params.size_range);
           $('#config-prompt').attr("placeholder", data.values.params.prompt);
           $('#config-negative-prompt').attr("placeholder", data.values.params.negative_prompt);
           let cloned = JSON.parse(JSON.stringify(data.values.params));
@@ -515,6 +519,31 @@ const applyConfig = () => {
     values.params.height = height;
     changed.push("height");
   }
+  // Read seed
+  let sd = $('#config-seed').val().trim();
+  if(sd.length > 0) {
+    let seed = parseInt(sd);
+    if(isNaN(seed)) {
+      appendAlert("danger", "Invalid seed: " + sd);
+      return;
+    }
+    values.params.seed = seed;
+    changed.push("seed");
+  } else {
+    values.params.seed = "";
+    changed.push("seed");
+  }
+  // Read size range
+  let sr = $('#config-size-range').val().trim();
+  if(sr.length > 0) {
+    let size_range = parseFloat(sr);
+    if(isNaN(size_range) || size_range < 0.0 || size_range > 1.0) {
+      appendAlert("danger", "Invalid size_range: " + sr);
+      return;
+    }
+    values.params.size_range = size_range;
+    changed.push("size_range");
+  }
   // Read prompt
   let p = $('#config-prompt').val().trim();
   if(p.length > 0) {
@@ -552,6 +581,8 @@ const applyConfig = () => {
       $('#config-cfg-scale').val("");
       $('#config-width').val("");
       $('#config-height').val("");
+      $('#config-seed').val("");
+      $('#config-size-range').val("");
       $('#config-prompt').val("");
       $('#config-negative-prompt').val("");
       $('#config-other').val("");
@@ -626,6 +657,8 @@ const setUpEventHandlers = () => {
     '#config-cfg-scale',
     '#config-width',
     '#config-height',
+    '#config-seed',
+    '#config-size-range',
     '#config-prompt',
     '#config-negative-prompt',
     '#config-other'

@@ -17,6 +17,8 @@
       "sampling_method": "Default",
       "sampling_steps": 25,
       "cfg_scale": 8,
+      "seed": "",
+      "size_range": 0.0,
       "prompt": "cat",
       "negative_prompt": "EasyNegative, nsfw, worst quality, low quality",
       "highres_fix": [

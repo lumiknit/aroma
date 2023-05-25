@@ -54,10 +54,19 @@
             Reduce number of hidden layers of CLIP text encoder. Note that common stable diffusion 1.x uses 12 layers CLIP. Recommend 0, 1 or 2
           </li>
           <li>
-            <b> Sampling Method </b> : Recommend DPM++ 2M Karras
+            <b> S. Method </b> : Sampling Method. Recommend DPM++ 2M Karras
           </li>
           <li>
-            <b> Sampling Steps, CFG Scale, Width, Height </b>
+            <b> S. Steps </b> : Sampling Steps. Recommend DPM++ 2M Karras
+          </li>
+          <li>
+            <b> CFG Scale, Width, Height </b>
+          </li>
+          <li>
+            <b> Seed </b> : Random seed. Keep it blank if you want to use random seed.
+          </li>
+          <li>
+            <b> Sz.Rng. </b> : Size Range. Must be 0.0-1.0. The width and height will be randomly multiplied by [1.0 - size range, 1.0 + size range]. For example, if width = 500 and Sz.Rng. is 0.5, width will be random size in the range [250, 750]
           </li>
           <li>
             <b> Positive/Negative Prompts Grammer </b>
