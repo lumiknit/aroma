@@ -5,6 +5,7 @@
   "outputs_root": "./outputs",
   "archives_root": "./archives",
   "image_format": "webp",
+  "image_quality": 90,
   "save_raw": false,
   "init_values": {
     "model": {

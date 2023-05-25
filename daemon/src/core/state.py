@@ -91,6 +91,10 @@ class State:
         self.outputs_root = d["outputs_root"]
         self.save_raw = d["save_raw"]
         self.image_format = d["image_format"]
+        try:
+            self.image_quality = int(d["image_quality"])
+        except:
+            self.image_quality = 90
 
         self.values = d["init_values"]
 
@@ -174,18 +178,19 @@ class State:
         file_prefix = now.strftime("%y%m%d-%H%M%S-%f")
         self.job["filename"] = f"{file_prefix}"
         self.job["image_format"] = f"{self.image_format}"
+        self.job["image_quality"] = self.image_quality
         # Write to file
         with open(f"{self.state_root}/last_job.json", "w") as f:
             f.write(json.dumps(self.job))
         # If save_raw is enabled, save files to disk
         if self.save_raw:
-            img.save(f"{self.outputs_root}/{file_prefix}.{self.image_format}", quality=100)
+            img.save(f"{self.outputs_root}/{file_prefix}.{self.image_format}", quality=self.image_quality)
             self.save_values(f"{self.outputs_root}/{file_prefix}.json")
         # Write encoded output
         if img is not None:
             # Convert Image into base64 and set to image field
             buffered = BytesIO()
-            img.save(buffered, format=self.image_format, quality=100)
+            img.save(buffered, format=self.image_format, quality=self.image_quality)
             self.job["image"] = base64.b64encode(buffered.getvalue()).decode("utf-8")
             # Encode
             encoded = aroma_encode(self.mask, json.dumps(self.job))
