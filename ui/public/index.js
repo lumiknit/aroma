@@ -382,35 +382,36 @@ const reload = () => {
         }
       }
     });
+    // Load last job
+    // It must be run in background because it'll add image to gallery
+    $.get("/aroma-static/state/last_job.json", (data) => {
+      try {
+        data = JSON.parse(aromaDecode(mask, data));
+        updatePWIndicator(true);
+      } catch(e) {
+        // Maybe password failed
+        updatePWIndicator(false);
+        return;
+      }
+      let start_time = new Date(data.start_time);
+      let end_time = new Date(data.end_time);
+      let elapsed = end_time - start_time;
+      $('#state-last-elapsed').text((elapsed / 1000).toFixed(1) + "s");
+      let filename = data.filename;
+      $('#state-last-file').text(filename);
+      pushImage(filename);
+      loadImageDataByName(filename);
+    });
   }
-  // Load last job
-  // It must be run in background because it'll add image to gallery
-  $.get("/aroma-static/state/last_job.json", (data) => {
-    try {
-      data = JSON.parse(aromaDecode(mask, data));
-      updatePWIndicator(true);
-    } catch(e) {
-      // Maybe password failed
-      updatePWIndicator(false);
-      return;
-    }
-    let start_time = new Date(data.start_time);
-    let end_time = new Date(data.end_time);
-    let elapsed = end_time - start_time;
-    $('#state-last-elapsed').text((elapsed / 1000).toFixed(1) + "s");
-    let filename = data.filename;
-    $('#state-last-file').text(filename);
-    pushImage(filename);
-    loadImageDataByName(filename);
-  });
 };
 
-const loadAllGallery = () => {
-  for(var i = 0; i < 3; i++) {
-    resetColumn(i);
+const loadAllGallery = (clear) => {
+  if(clear) {
+    for(var i = 0; i < 3; i++) {
+      resetColumn(i);
+    }
+    image_map = {};
   }
-  images = [];
-  image_map = {};
 
   $.get("/api/outputs", (data) => {
     data.forEach((name) => {
@@ -652,7 +653,13 @@ $(() => {
   setInterval(() => {
     reload();
     updateDaemonStatus();
-  }, 364);
+  }, 401);
+  document.addEventListener('visibilitychange', (e) => {
+    if(!document.hidden) {
+      // Try to reload all images
+      loadAllGallery();
+    }
+  });
 
   // Set QR
   $('#qr-link').attr("href", "qr.html?text=" + encodeURI(window.location.href));
