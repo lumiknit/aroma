@@ -605,6 +605,11 @@ const setUpEventHandlers = () => {
       });
     })(tb);
   }
+  $('#text-pw').on('keyup', (e) => {
+    if(e.keyCode == 13) {
+      updatePassword();
+    }
+  });
 };
 
 // Init
