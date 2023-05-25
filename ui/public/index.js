@@ -384,6 +384,8 @@ const reload = () => {
           delete cloned.height;
           delete cloned.prompt;
           delete cloned.negative_prompt;
+          delete cloned.seed;
+          delete cloned.size_range;
           $('#config-other').attr("placeholder", JSON.stringify(cloned));
         }
       }

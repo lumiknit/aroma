@@ -267,10 +267,11 @@ class SDPipes:
         try:
             rng = float(params["size_range"])
             if rng > 0:
-                dw = float(np.random.uniform(low=-rng, high=rng))
-                dh = float(np.random.uniform(low=-rng, high=rng))
-                w = int(w * (1 + dw))
-                h = int(h * (1 + dh))
+                dr = float(np.random.uniform(low=-rng, high=rng))
+                # Preserve area
+                area = w * h
+                w = int(w * (1 + dr))
+                h = int(area / w)
         except:
             print("[WARNING] Invalid size range, ignore it.")
         w = filter_image_size(w)

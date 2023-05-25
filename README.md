@@ -9,6 +9,7 @@ This is for users who
 - need txt2img loops running on local (especially with MPS) or colab need (some naive but maybe useful) features
   - prompt weights as WebUI syntax using `()[](:weight)`
   - random prompt using `{a; b: 1.5}`
+  - random size image
   - clip skip
   - multistep highres fix
   - textual inversions
