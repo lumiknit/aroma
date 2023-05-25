@@ -75,3 +75,6 @@ You can
 
 ## TODO
 
+- Random weighted prompt
+- Fix model download UIs
+- Save password in localstorage
