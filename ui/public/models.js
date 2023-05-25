@@ -87,7 +87,7 @@ const updateDownloadStatus = () => {
       tr.append(`<td>${repo_id}</td>`);
       tr.append(`<td>${subdir}</td>`);
       let log = $(`<pre></pre>`);
-      log.text(out);
+      log.text(out.split("\n").map((x) => x.trim()).slice(-2).join("\n"));
       let td = $(`<td></td>`);
       td.append(log);
       tr.append(td);
