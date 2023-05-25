@@ -30,6 +30,32 @@ const formatDate = (date) => {
   return y.substr(-2) + m.substr(-2) + day.substr(-2) + " " + h.substr(-2) + ":" + min.substr(-2) + ":" + s.substr(-2);
 };
 
+const jsonToHtml = (obj) => {
+  let html;
+  // Recursively convert to html
+  if(typeof obj === "object") {
+    // Check is array
+    if(Array.isArray(obj)) {
+      html = $('<ol>');
+      for(let i = 0; i < obj.length; i++) {
+        html.append($('<li>').append(jsonToHtml(obj[i])));
+      }
+    } else {
+      html = $('<ul>');
+      for(let key in obj) {
+        let k = $('<b>').text(key + ": ");
+        let li = $('<li>').append(k);
+        li.append(jsonToHtml(obj[key]));
+        html.append(li);
+      }
+    }
+  } else if(typeof obj === "string") {
+    html = $('<span>').text('"' + obj + '"');
+  } else {
+    html = $('<span>').text(obj);
+  }
+  return html;
+};
 
 // Image Management
 
@@ -122,7 +148,7 @@ const setupImageData = (name) => {
   img.a = JSON.parse(decoded);
   // Update card
   img_v.attr("src", "data:image/" + img.a.image_format + ";base64," + img.a.image);
-  desc.text(JSON.stringify(img.a.values));
+  desc.html(jsonToHtml(img.a.values).html());
   $("#card-btns--" + name).prepend($(`<button class="btn btn-sm btn-outline-primary" onclick="reuseImageSettings('` + name + `')"> Reuse </button>`));
 };
 
