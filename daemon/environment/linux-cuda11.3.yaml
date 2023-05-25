@@ -1,14 +1,13 @@
 name: aroma
 channels:
-- nvidia
 - pytorch
 - conda-forge
 dependencies:
-- python=3.11
-- pytorch
+- python=3.9
+- pytorch=1.12.1
 - torchvision
 - torchaudio
-- pytorch-cuda=11.4
+- cudatoolkit=11.3
 - pytorch-lightning
 - numpy
 - pillow
