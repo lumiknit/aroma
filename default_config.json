@@ -19,7 +19,7 @@
       "cfg_scale": 8,
       "seed": "",
       "size_range": 0.0,
-      "prompt": "cat",
+      "prompt": "high quality, { {red; yellow} cat; dog}",
       "negative_prompt": "EasyNegative, nsfw, worst quality, low quality",
       "highres_fix": [
         {
