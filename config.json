@@ -5,31 +5,7 @@
   },
   "webui": {
     "model_download_presets": {
-      "lumiknit/diffusers-model-archive": [
-        "AOM3_orangemixs",
-        "Counterfeit-V2.2",
-        "Counterfeit-V2.5",
-        "Counterfeit-V3.0",
-        "anything-v4.5",
-        "bra-v5",
-        "chickmixflat-v1-0",
-        "chilloutmix_NiPruned",
-        "darkSushiMix_colorful",
-        "forgottenmix_v10",
-        "hassaku_v12",
-        "kanpiromix_v20",
-        "kuronekoAnimemix_v10",
-        "majicmixRealistic_v4",
-        "meinapastel_v5",
-        "meinaunreal_v3",
-        "mixProV4",
-        "niji3dstyle-v1",
-        "perfectWorld_v4",
-        "profantasy_v22",
-        "realisian_v20",
-        "realisian_v40",
-        "tauronHybridReal_v21",
-        "textual_inversions"
+      "runwayaml/stable-diffusion-v1-5": [
       ]
     }
   }
