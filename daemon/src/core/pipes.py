@@ -77,10 +77,14 @@ class SDPipes:
                     if ti_path.endswith('.pt') or ti_path.endswith('.safetensors'):
                         token = pathlib.Path(ti_path).stem
                         print(f"[INFO] Loading textual inversion from {path} as {token}")
-                        txt2img.load_textual_inversion(
-                            ti_path,
-                            token=token,
-                        )
+                        try:
+                            txt2img.load_textual_inversion(
+                                ti_path,
+                                token=token,
+                            )
+                        except Exception as e:
+                            print(f"[WARNING] Cannot load textual inversion {ti_path}: {e}")
+                            print(f"[WARINIG] just ignore {token}")
 
         # Send to device
         txt2img = txt2img.to(torch_device())
