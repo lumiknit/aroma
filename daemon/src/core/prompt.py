@@ -1,4 +1,5 @@
 from diffusers.loaders import TextualInversionLoaderMixin
+import numpy as np
 import torch
 
 from .util import torch_device, is_torch_2_0
@@ -9,7 +10,72 @@ Prompt Grammer
 (<prompts>:<weight>), [<prompts>:<weight>] -> weighted by weight
 (<prompts>) -> weighted by 1.1
 [<prompts>] -> weighted by 0.9
+{<p1>; <p2>; ...} -> One of paramas
 """
+
+
+def process_random_prompts(text):
+    "Convert prompts containing random choose to fixed prompts"
+    if not isinstance(text, str):
+        raise Exception("Invalid text (expect str)")
+    p_stack = ['']
+    stack = [[("", 1)]]
+    i = 0
+    while i < len(text):
+        c = text[i]
+        is_choice = p_stack[-1] == '}'
+        if c == "{":
+            # Insert new stack
+            p_stack.append('}')
+            stack.append([("", 1)])
+        elif is_choice and c == ";":
+            # Add to next choice
+            stack[-1].append(("", 1))
+        elif is_choice and c == ":":
+            # Calculate weight
+            j = i + 1
+            num = ""
+            c = text[j]
+            while j < len(text):
+                if c == "." or c.isdigit(): num += c
+                elif c > " ": break
+                j += 1
+                c = text[j]
+            i = j - 1
+            try:
+                weight = float(num)
+                stack[-1][-1] = (stack[-1][-1][0], weight)
+            except:
+                print(f"[WARN] Failed to parse weight: {num}, ignore it")
+        elif is_choice and c == "}" and len(stack) > 1:
+            # Choose and merge
+            p_stack.pop()
+            last = stack.pop()
+            p = [max(0.0, e[1]) for e in last]
+            p = np.array(p) / np.sum(p)
+            idx = np.random.choice(len(last), p=p)
+            stack[-1][-1] = (stack[-1][-1][0] + last[idx][0], stack[-1][-1][1])
+        else:
+            last = stack[-1][-1]
+            stack[-1][-1] = (last[0] + c, last[1])
+            if c == "(":
+                p_stack.append(')')
+            elif c == "[":
+                p_stack.append(']')
+            elif p_stack[-1] == c:
+                p_stack.pop()
+        i += 1
+    # Merge all
+    while len(stack) > 0:
+        last = stack.pop()
+        p = [max(0.0, e[1]) for e in last]
+        p = np.array(p) / np.sum(p)
+        idx = np.random.choice(len(last), p=p)
+        if len(stack) == 0:
+            return last[idx][0]
+        stack[-1][-1] = (stack[-1][-1][0] + last[idx][0], stack[-1][-1][1])
+    # Unreachable
+    return None
 
 
 def text_to_weighted_list(text):
@@ -38,8 +104,9 @@ def text_to_weighted_list(text):
             j = i + 1
             num = ""
             c = text[j]
-            while j < len(text) and (c <= " " or c == "." or c.isdigit()):
-                num += c
+            while j < len(text):
+                if c == "." or c.isdigit(): num += c
+                elif c > " ": break
                 j += 1
                 c = text[j]
             i = j - 1
@@ -81,6 +148,7 @@ def text_to_weighted_list(text):
 class Prompt:
     def __init__(self, text):
         self.text = text
+        self.pp_text = text
         self.embeds = None
 
     def update_embed(self, text, txt2img):
@@ -90,8 +158,12 @@ class Prompt:
         if not isinstance(text, str):
             raise Exception("Invalid text (expect str)")
 
+        # Run random choice
+        text = process_random_prompts(text)
+        pp_text = text
+
         # Check if text is the same. If so, use cached one
-        if self.text == text:
+        if self.pp_text == pp_text:
             return
 
         # Try to convert prompt
@@ -141,4 +213,5 @@ class Prompt:
             embeds += (text_e[i : i + 1] - embeds) * weights[i]
 
         self.text = text
+        self.pp_text = pp_text
         self.embeds = embeds

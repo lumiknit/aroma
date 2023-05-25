@@ -36,7 +36,7 @@ if __name__ == "__main__":
             i += 1
         except Exception as e:
             print(f"[ERROR] Exception occurred: {e}")
-            # print(traceback.format_exc())
+            print(traceback.format_exc())
             print("[ERROR] Sleep a second and retry")
             state.write_state("error", str(e))
             time.sleep(1)

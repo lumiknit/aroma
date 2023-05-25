@@ -172,6 +172,11 @@ class SDPipes:
         params = values["params"]
         self.prompt.update_embed(params["prompt"], self.txt2img)
         self.negative_prompt.update_embed(params["negative_prompt"], self.txt2img)
+        # Prompt may changed because of random choose. put the values in state
+        state.values["choosed_prompt"] = {
+            "positive": self.prompt.pp_text,
+            "negative": self.negative_prompt.pp_text,
+        }
         return self._txt2img_generate(state)
 
     def _update_sampling_method(self, name):
@@ -390,11 +395,5 @@ class SDPipes:
         if self.model_path != f"{state.models_root}/{values['model']['path']}" \
             or self.clip_skip != values['model']["clip_skip"]:
             return self._txt2img_load_model(state)
-        # If prompt changed, run from update embedding of model
-        if (
-            self.prompt.text != params["prompt"]
-            or self.negative_prompt.text != params["negative_prompt"]
-        ):
-            return self._txt2img_update_prompt(state)
-        # Otherwise, run from generate
-        return self._txt2img_generate(state)
+        # Otherwise, run from update_prompt
+        return self._txt2img_update_prompt(state)
