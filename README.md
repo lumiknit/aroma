@@ -75,6 +75,8 @@ You can
 
 ## TODO
 
+- When reopen window, load all generated images
+- Allow enter key for password field
 - Random weighted prompt
 - Fix model download UIs
 - Save password in localstorage
