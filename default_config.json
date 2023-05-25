@@ -8,7 +8,8 @@
   "save_raw": false,
   "init_values": {
     "model": {
-      "path": ""
+      "path": "",
+      "clip_skip": 0
     },
     "params": {
       "width": 280,

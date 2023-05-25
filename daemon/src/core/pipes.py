@@ -6,6 +6,7 @@ import pathlib
 from packaging.version import Version
 
 import torch
+from transformers import CLIPTextModel
 from diffusers import *
 
 import PIL
@@ -26,6 +27,7 @@ def filter_image_size(len):
 class SDPipes:
     def __init__(self):
         self.model_path = None
+        self.clip_skip = 0
 
         self.prompt = Prompt(".")
         self.negative_prompt = Prompt(".")
@@ -35,7 +37,8 @@ class SDPipes:
         self.img2img = None
 
     def _load_model(
-        self, state, path, dtype=torch.float16
+        self, state, path, dtype=torch.float16,
+        clip_skip=0,
     ):
         # Create kwargs
         kwargs = {}
@@ -55,17 +58,29 @@ class SDPipes:
                 path,
                 **kwargs,
                 torch_dtype=dtype,
+                local_files_only=True,
             )
         except Exception as e:
             print(f"[ERROR] Cannot load model {path}: {e}")
             raise Exception(f"Cannot load model {path}, please check selected model")
+
+        # Clip skip
+        print(f"[INFO] Clip skip {clip_skip}")
+        if clip_skip > 0:
+            txt2img.text_encoder = CLIPTextModel.from_pretrained(
+                path,
+                torch_dtype=dtype,
+                subfolder="text_encoder",
+                num_hidden_layers=(txt2img.text_encoder.config.num_hidden_layers - clip_skip),
+                local_files_only=True,
+            )
+        print(f"[INFO] CLIP num hidden layers = {txt2img.text_encoder.config.num_hidden_layers}")
 
         # Disable safety checker for performance
         txt2img.safety_checker = None
 
         # Load Textual Inversion
         for (root, dirs, files) in os.walk(state.models_root):
-            print(root)
             # Check if root is textual inversion root
             base = os.path.basename(root)
             base.lower()
@@ -133,6 +148,7 @@ class SDPipes:
 
         # Done, update variables
         self.model_path = path
+        self.clip_skip = clip_skip
         self.txt2img = txt2img
         self.img2img = img2img
         self.default_scheduler = txt2img.scheduler
@@ -144,6 +160,7 @@ class SDPipes:
         self._load_model(
             state,
             f"{state.models_root}/{values['model']['path']}",
+            clip_skip=values["model"]["clip_skip"],
         )
         return self._txt2img_update_prompt(state)
 
@@ -337,7 +354,8 @@ class SDPipes:
         # If model changed, run from reload model
         print(f"A: {self.model_path}")
         print(f"B: {state.models_root}/{values['model']['path']}")
-        if self.model_path != f"{state.models_root}/{values['model']['path']}":
+        if self.model_path != f"{state.models_root}/{values['model']['path']}" \
+            or self.clip_skip != values['model']["clip_skip"]:
             return self._txt2img_load_model(state)
         # If prompt changed, run from update embedding of model
         if (

@@ -8,6 +8,7 @@ This is for users who
 - use huggingface/diffusers library & models
 - need txt2img loops running on local (especially with MPS) or colab need (some naive but maybe useful) features
   - prompt weights as WebUI syntax using `()[](:weight)`
+  - clip skip
   - multistep highres fix
   - textual inversions
 - and need simple UI
@@ -100,7 +101,5 @@ All default configurations are placed in `default_config.json`. You can overwrit
 
 ## TODO
 
-- When reopen window, load all generated images
 - Random weighted prompt
 - Fix model download UIs
-- Save password in localstorage

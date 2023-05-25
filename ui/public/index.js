@@ -195,6 +195,7 @@ const reuseImageSettings = (name) => {
   let config = image_map[name].a.values;
   // Set config
   $('#config-model-path').val(config.config.model.path);
+  $('#config-clip-skip').val(config.config.model.clip_skip);
   $('#config-sampling-method').val(config.config.params.sampling_method);
   $('#config-sampling-steps').val(config.config.params.sampling_steps);
   $('#config-cfg-scale').val(config.config.params.cfg_scale);
@@ -364,6 +365,7 @@ const reload = () => {
           if($('#config-sampling-method-current').text() !== new_text) {
             $('#config-sampling-method-current').text(new_text);
           }
+          $('#config-clip-skip').attr("placeholder", data.values.model.clip_skip);
           $('#config-sampling-steps').attr("placeholder", data.values.params.sampling_steps);
           $('#config-cfg-scale').attr("placeholder", data.values.params.cfg_scale);
           $('#config-width').attr("placeholder", data.values.params.width);
@@ -452,6 +454,17 @@ const applyConfig = () => {
     appendAlert("danger", "Invalid other config: " + e);
     return;
   }
+  // Read clip skip
+  let mcs = $('#config-clip-skip').val().trim();
+  if(mcs.length > 0) {
+    let clip_skip = parseInt(mcs);
+    if(isNaN(clip_skip) || clip_skip < 0 || clip_skip > 10) {
+      appendAlert("danger", "Invalid clip skip: " + cs);
+      return;
+    }
+    values.model.clip_skip = clip_skip;
+    changed.push("clip_skip");
+  }
   // Read sampling method
   let sm = $('#config-sampling-method').val().trim();
   if(sm.length > 0 && sm !== "Default") {
@@ -461,7 +474,7 @@ const applyConfig = () => {
   // Read sampling steps
   let ss = $('#config-sampling-steps').val().trim();
   if(ss.length > 0) {
-    let sampling_steps = parseInt($('#config-sampling-steps').val());
+    let sampling_steps = parseInt(ss);
     if(isNaN(sampling_steps) || sampling_steps < 1 || sampling_steps > 1000) {
       appendAlert("danger", "Invalid sampling steps: " + ss);
       return;
@@ -472,7 +485,7 @@ const applyConfig = () => {
   // Read cfg scale
   let cs = $('#config-cfg-scale').val().trim();
   if(cs.length > 0) {
-    let cfg_scale = parseFloat($('#config-cfg-scale').val());
+    let cfg_scale = parseFloat(cs);
     if(isNaN(cfg_scale) || cfg_scale < 0.1 || cfg_scale > 20) {
       appendAlert("danger", "Invalid cfg scale: " + cs);
       return;
@@ -483,7 +496,7 @@ const applyConfig = () => {
   // Read width
   let w = $('#config-width').val().trim();
   if(w.length > 0) {
-    let width = parseInt($('#config-width').val());
+    let width = parseInt(w);
     if(isNaN(width) || width < 1 || width > 10000) {
       appendAlert("danger", "Invalid width: " + w);
       return;
@@ -494,7 +507,7 @@ const applyConfig = () => {
   // Read height
   let h = $('#config-height').val().trim();
   if(h.length > 0) {
-    let height = parseInt($('#config-height').val());
+    let height = parseInt(h);
     if(isNaN(height) || height < 1 || height > 10000) {
       appendAlert("danger", "Invalid height: " + h);
       return;
@@ -533,6 +546,7 @@ const applyConfig = () => {
     success: (data) => {
       // Reset all fields
       $('#config-model-path').val("");
+      $('#config-clip-skip').val("");
       $('#config-sampling-method').val("Default");
       $('#config-sampling-steps').val("");
       $('#config-cfg-scale').val("");
@@ -607,6 +621,7 @@ const updatePassword = (showAlert) => {
 
 const setUpEventHandlers = () => {
   const textboxes = [
+    '#config-clip-skip',
     '#config-sampling-steps',
     '#config-cfg-scale',
     '#config-width',
