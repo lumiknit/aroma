@@ -179,13 +179,13 @@ class State:
             f.write(json.dumps(self.job))
         # If save_raw is enabled, save files to disk
         if self.save_raw:
-            img.save(f"{self.outputs_root}/{file_prefix}.{self.image_format}")
+            img.save(f"{self.outputs_root}/{file_prefix}.{self.image_format}", quality=100)
             self.save_values(f"{self.outputs_root}/{file_prefix}.json")
         # Write encoded output
         if img is not None:
             # Convert Image into base64 and set to image field
             buffered = BytesIO()
-            img.save(buffered, format=self.image_format)
+            img.save(buffered, format=self.image_format, quality=100)
             self.job["image"] = base64.b64encode(buffered.getvalue()).decode("utf-8")
             # Encode
             encoded = aroma_encode(self.mask, json.dumps(self.job))

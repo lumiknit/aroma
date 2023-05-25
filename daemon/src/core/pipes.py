@@ -5,7 +5,9 @@ import os
 import pathlib
 from packaging.version import Version
 
+import numpy as np
 import torch
+from transformers import CLIPTextModel
 from diffusers import *
 
 import PIL
@@ -26,6 +28,7 @@ def filter_image_size(len):
 class SDPipes:
     def __init__(self):
         self.model_path = None
+        self.clip_skip = 0
 
         self.prompt = Prompt(".")
         self.negative_prompt = Prompt(".")
@@ -35,7 +38,8 @@ class SDPipes:
         self.img2img = None
 
     def _load_model(
-        self, state, path, dtype=torch.float16
+        self, state, path, dtype=torch.float16,
+        clip_skip=0,
     ):
         # Create kwargs
         kwargs = {}
@@ -55,17 +59,29 @@ class SDPipes:
                 path,
                 **kwargs,
                 torch_dtype=dtype,
+                local_files_only=True,
             )
         except Exception as e:
             print(f"[ERROR] Cannot load model {path}: {e}")
             raise Exception(f"Cannot load model {path}, please check selected model")
+
+        # Clip skip
+        print(f"[INFO] Clip skip {clip_skip}")
+        if clip_skip > 0:
+            txt2img.text_encoder = CLIPTextModel.from_pretrained(
+                path,
+                torch_dtype=dtype,
+                subfolder="text_encoder",
+                num_hidden_layers=(txt2img.text_encoder.config.num_hidden_layers - clip_skip),
+                local_files_only=True,
+            )
+        print(f"[INFO] CLIP num hidden layers = {txt2img.text_encoder.config.num_hidden_layers}")
 
         # Disable safety checker for performance
         txt2img.safety_checker = None
 
         # Load Textual Inversion
         for (root, dirs, files) in os.walk(state.models_root):
-            print(root)
             # Check if root is textual inversion root
             base = os.path.basename(root)
             base.lower()
@@ -77,10 +93,14 @@ class SDPipes:
                     if ti_path.endswith('.pt') or ti_path.endswith('.safetensors'):
                         token = pathlib.Path(ti_path).stem
                         print(f"[INFO] Loading textual inversion from {path} as {token}")
-                        txt2img.load_textual_inversion(
-                            ti_path,
-                            token=token,
-                        )
+                        try:
+                            txt2img.load_textual_inversion(
+                                ti_path,
+                                token=token,
+                            )
+                        except Exception as e:
+                            print(f"[WARNING] Cannot load textual inversion {ti_path}: {e}")
+                            print(f"[WARINIG] just ignore {token}")
 
         # Send to device
         txt2img = txt2img.to(torch_device())
@@ -129,6 +149,7 @@ class SDPipes:
 
         # Done, update variables
         self.model_path = path
+        self.clip_skip = clip_skip
         self.txt2img = txt2img
         self.img2img = img2img
         self.default_scheduler = txt2img.scheduler
@@ -140,6 +161,7 @@ class SDPipes:
         self._load_model(
             state,
             f"{state.models_root}/{values['model']['path']}",
+            clip_skip=values["model"]["clip_skip"],
         )
         return self._txt2img_update_prompt(state)
 
@@ -150,6 +172,11 @@ class SDPipes:
         params = values["params"]
         self.prompt.update_embed(params["prompt"], self.txt2img)
         self.negative_prompt.update_embed(params["negative_prompt"], self.txt2img)
+        # Prompt may changed because of random choose. put the values in state
+        state.values["choosed_prompt"] = {
+            "positive": self.prompt.pp_text,
+            "negative": self.negative_prompt.pp_text,
+        }
         return self._txt2img_generate(state)
 
     def _update_sampling_method(self, name):
@@ -229,11 +256,44 @@ class SDPipes:
         state.write_state("setup_params", {})
         kwargs = {}
 
+
         # Check params and generate
-        kwargs["width"] = filter_image_size(params["width"])
-        kwargs["height"] = filter_image_size(params["height"])
         kwargs["num_inference_steps"] = params["sampling_steps"]
         kwargs["guidance_scale"] = params["cfg_scale"]
+
+        # Put size
+        w = int(params["width"])
+        h = int(params["height"])
+        try:
+            rng = float(params["size_range"])
+            if rng > 0:
+                dr = float(np.random.uniform(low=-rng, high=rng))
+                # Preserve area
+                area = w * h
+                w = int(w * (1 + dr))
+                h = int(area / w)
+        except:
+            print("[WARNING] Invalid size range, ignore it.")
+        w = filter_image_size(w)
+        h = filter_image_size(h)
+
+        kwargs["width"] = w
+        kwargs["height"] = h
+
+        state.job["values"]["fixed_size"] = {
+            "w": w,
+            "h": h,
+        }
+
+        # If seed is given, use it
+        if params["seed"] != "":
+            try:
+                s = int(params["seed"])
+                kwargs["generator"] = [
+                    torch.Generator(device=torch_device()).manual_seed(s)
+                ]
+            except:
+                print("[WARNING] Invalid seed ignore it.")
 
         # Change sampling method
         state.write_state("update_sampler", {})
@@ -333,13 +393,8 @@ class SDPipes:
         # If model changed, run from reload model
         print(f"A: {self.model_path}")
         print(f"B: {state.models_root}/{values['model']['path']}")
-        if self.model_path != f"{state.models_root}/{values['model']['path']}":
+        if self.model_path != f"{state.models_root}/{values['model']['path']}" \
+            or self.clip_skip != values['model']["clip_skip"]:
             return self._txt2img_load_model(state)
-        # If prompt changed, run from update embedding of model
-        if (
-            self.prompt.text != params["prompt"]
-            or self.negative_prompt.text != params["negative_prompt"]
-        ):
-            return self._txt2img_update_prompt(state)
-        # Otherwise, run from generate
-        return self._txt2img_generate(state)
+        # Otherwise, run from update_prompt
+        return self._txt2img_update_prompt(state)

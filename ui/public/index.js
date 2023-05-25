@@ -30,6 +30,32 @@ const formatDate = (date) => {
   return y.substr(-2) + m.substr(-2) + day.substr(-2) + " " + h.substr(-2) + ":" + min.substr(-2) + ":" + s.substr(-2);
 };
 
+const jsonToHtml = (obj) => {
+  let html;
+  // Recursively convert to html
+  if(typeof obj === "object") {
+    // Check is array
+    if(Array.isArray(obj)) {
+      html = $('<ol>');
+      for(let i = 0; i < obj.length; i++) {
+        html.append($('<li>').append(jsonToHtml(obj[i])));
+      }
+    } else {
+      html = $('<ul>');
+      for(let key in obj) {
+        let k = $('<b>').text(key + ": ");
+        let li = $('<li>').append(k);
+        li.append(jsonToHtml(obj[key]));
+        html.append(li);
+      }
+    }
+  } else if(typeof obj === "string") {
+    html = $('<span>').text('"' + obj + '"');
+  } else {
+    html = $('<span>').text(obj);
+  }
+  return html;
+};
 
 // Image Management
 
@@ -122,7 +148,7 @@ const setupImageData = (name) => {
   img.a = JSON.parse(decoded);
   // Update card
   img_v.attr("src", "data:image/" + img.a.image_format + ";base64," + img.a.image);
-  desc.text(JSON.stringify(img.a.values));
+  desc.html(jsonToHtml(img.a.values).html());
   $("#card-btns--" + name).prepend($(`<button class="btn btn-sm btn-outline-primary" onclick="reuseImageSettings('` + name + `')"> Reuse </button>`));
 };
 
@@ -169,11 +195,14 @@ const reuseImageSettings = (name) => {
   let config = image_map[name].a.values;
   // Set config
   $('#config-model-path').val(config.config.model.path);
+  $('#config-clip-skip').val(config.config.model.clip_skip);
   $('#config-sampling-method').val(config.config.params.sampling_method);
   $('#config-sampling-steps').val(config.config.params.sampling_steps);
   $('#config-cfg-scale').val(config.config.params.cfg_scale);
   $('#config-width').val(config.config.params.width);
   $('#config-height').val(config.config.params.height);
+  $('#config-seed').val(config.config.params.seed);
+  $('#config-size-range').val(config.config.params.size_range);
   $('#config-prompt').val(config.config.params.prompt);
   $('#config-negative-prompt').val(config.config.params.negative_prompt);
   let cloned = JSON.parse(JSON.stringify(config.config.params));
@@ -338,10 +367,13 @@ const reload = () => {
           if($('#config-sampling-method-current').text() !== new_text) {
             $('#config-sampling-method-current').text(new_text);
           }
+          $('#config-clip-skip').attr("placeholder", data.values.model.clip_skip);
           $('#config-sampling-steps').attr("placeholder", data.values.params.sampling_steps);
           $('#config-cfg-scale').attr("placeholder", data.values.params.cfg_scale);
           $('#config-width').attr("placeholder", data.values.params.width);
           $('#config-height').attr("placeholder", data.values.params.height);
+          $('#config-seed').attr("placeholder", data.values.params.seed);
+          $('#config-size-range').attr("placeholder", data.values.params.size_range);
           $('#config-prompt').attr("placeholder", data.values.params.prompt);
           $('#config-negative-prompt').attr("placeholder", data.values.params.negative_prompt);
           let cloned = JSON.parse(JSON.stringify(data.values.params));
@@ -352,39 +384,42 @@ const reload = () => {
           delete cloned.height;
           delete cloned.prompt;
           delete cloned.negative_prompt;
+          delete cloned.seed;
+          delete cloned.size_range;
           $('#config-other').attr("placeholder", JSON.stringify(cloned));
         }
       }
     });
+    // Load last job
+    // It must be run in background because it'll add image to gallery
+    $.get("/aroma-static/state/last_job.json", (data) => {
+      try {
+        data = JSON.parse(aromaDecode(mask, data));
+        updatePWIndicator(true);
+      } catch(e) {
+        // Maybe password failed
+        updatePWIndicator(false);
+        return;
+      }
+      let start_time = new Date(data.start_time);
+      let end_time = new Date(data.end_time);
+      let elapsed = end_time - start_time;
+      $('#state-last-elapsed').text((elapsed / 1000).toFixed(1) + "s");
+      let filename = data.filename;
+      $('#state-last-file').text(filename);
+      pushImage(filename);
+      loadImageDataByName(filename);
+    });
   }
-  // Load last job
-  // It must be run in background because it'll add image to gallery
-  $.get("/aroma-static/state/last_job.json", (data) => {
-    try {
-      data = JSON.parse(aromaDecode(mask, data));
-      updatePWIndicator(true);
-    } catch(e) {
-      // Maybe password failed
-      updatePWIndicator(false);
-      return;
-    }
-    let start_time = new Date(data.start_time);
-    let end_time = new Date(data.end_time);
-    let elapsed = end_time - start_time;
-    $('#state-last-elapsed').text((elapsed / 1000).toFixed(1) + "s");
-    let filename = data.filename;
-    $('#state-last-file').text(filename);
-    pushImage(filename);
-    loadImageDataByName(filename);
-  });
 };
 
-const loadAllGallery = () => {
-  for(var i = 0; i < 3; i++) {
-    resetColumn(i);
+const loadAllGallery = (clear) => {
+  if(clear) {
+    for(var i = 0; i < 3; i++) {
+      resetColumn(i);
+    }
+    image_map = {};
   }
-  images = [];
-  image_map = {};
 
   $.get("/api/outputs", (data) => {
     data.forEach((name) => {
@@ -425,6 +460,17 @@ const applyConfig = () => {
     appendAlert("danger", "Invalid other config: " + e);
     return;
   }
+  // Read clip skip
+  let mcs = $('#config-clip-skip').val().trim();
+  if(mcs.length > 0) {
+    let clip_skip = parseInt(mcs);
+    if(isNaN(clip_skip) || clip_skip < 0 || clip_skip > 10) {
+      appendAlert("danger", "Invalid clip skip: " + cs);
+      return;
+    }
+    values.model.clip_skip = clip_skip;
+    changed.push("clip_skip");
+  }
   // Read sampling method
   let sm = $('#config-sampling-method').val().trim();
   if(sm.length > 0 && sm !== "Default") {
@@ -434,7 +480,7 @@ const applyConfig = () => {
   // Read sampling steps
   let ss = $('#config-sampling-steps').val().trim();
   if(ss.length > 0) {
-    let sampling_steps = parseInt($('#config-sampling-steps').val());
+    let sampling_steps = parseInt(ss);
     if(isNaN(sampling_steps) || sampling_steps < 1 || sampling_steps > 1000) {
       appendAlert("danger", "Invalid sampling steps: " + ss);
       return;
@@ -445,7 +491,7 @@ const applyConfig = () => {
   // Read cfg scale
   let cs = $('#config-cfg-scale').val().trim();
   if(cs.length > 0) {
-    let cfg_scale = parseFloat($('#config-cfg-scale').val());
+    let cfg_scale = parseFloat(cs);
     if(isNaN(cfg_scale) || cfg_scale < 0.1 || cfg_scale > 20) {
       appendAlert("danger", "Invalid cfg scale: " + cs);
       return;
@@ -456,7 +502,7 @@ const applyConfig = () => {
   // Read width
   let w = $('#config-width').val().trim();
   if(w.length > 0) {
-    let width = parseInt($('#config-width').val());
+    let width = parseInt(w);
     if(isNaN(width) || width < 1 || width > 10000) {
       appendAlert("danger", "Invalid width: " + w);
       return;
@@ -467,13 +513,38 @@ const applyConfig = () => {
   // Read height
   let h = $('#config-height').val().trim();
   if(h.length > 0) {
-    let height = parseInt($('#config-height').val());
+    let height = parseInt(h);
     if(isNaN(height) || height < 1 || height > 10000) {
       appendAlert("danger", "Invalid height: " + h);
       return;
     }
     values.params.height = height;
     changed.push("height");
+  }
+  // Read seed
+  let sd = $('#config-seed').val().trim();
+  if(sd.length > 0) {
+    let seed = parseInt(sd);
+    if(isNaN(seed)) {
+      appendAlert("danger", "Invalid seed: " + sd);
+      return;
+    }
+    values.params.seed = seed;
+    changed.push("seed");
+  } else {
+    values.params.seed = "";
+    changed.push("seed");
+  }
+  // Read size range
+  let sr = $('#config-size-range').val().trim();
+  if(sr.length > 0) {
+    let size_range = parseFloat(sr);
+    if(isNaN(size_range) || size_range < 0.0 || size_range > 1.0) {
+      appendAlert("danger", "Invalid size_range: " + sr);
+      return;
+    }
+    values.params.size_range = size_range;
+    changed.push("size_range");
   }
   // Read prompt
   let p = $('#config-prompt').val().trim();
@@ -506,11 +577,14 @@ const applyConfig = () => {
     success: (data) => {
       // Reset all fields
       $('#config-model-path').val("");
+      $('#config-clip-skip').val("");
       $('#config-sampling-method').val("Default");
       $('#config-sampling-steps').val("");
       $('#config-cfg-scale').val("");
       $('#config-width').val("");
       $('#config-height').val("");
+      $('#config-seed').val("");
+      $('#config-size-range').val("");
       $('#config-prompt').val("");
       $('#config-negative-prompt').val("");
       $('#config-other').val("");
@@ -580,10 +654,13 @@ const updatePassword = (showAlert) => {
 
 const setUpEventHandlers = () => {
   const textboxes = [
+    '#config-clip-skip',
     '#config-sampling-steps',
     '#config-cfg-scale',
     '#config-width',
     '#config-height',
+    '#config-seed',
+    '#config-size-range',
     '#config-prompt',
     '#config-negative-prompt',
     '#config-other'
@@ -605,6 +682,11 @@ const setUpEventHandlers = () => {
       });
     })(tb);
   }
+  $('#text-pw').on('keyup', (e) => {
+    if(e.keyCode == 13) {
+      updatePassword();
+    }
+  });
 };
 
 // Init
@@ -621,7 +703,13 @@ $(() => {
   setInterval(() => {
     reload();
     updateDaemonStatus();
-  }, 364);
+  }, 401);
+  document.addEventListener('visibilitychange', (e) => {
+    if(!document.hidden) {
+      // Try to reload all images
+      loadAllGallery();
+    }
+  });
 
   // Set QR
   $('#qr-link').attr("href", "qr.html?text=" + encodeURI(window.location.href));

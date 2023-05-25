@@ -8,7 +8,8 @@
   "save_raw": false,
   "init_values": {
     "model": {
-      "path": ""
+      "path": "",
+      "clip_skip": 0
     },
     "params": {
       "width": 280,
@@ -16,7 +17,9 @@
       "sampling_method": "Default",
       "sampling_steps": 25,
       "cfg_scale": 8,
-      "prompt": "cat",
+      "seed": "",
+      "size_range": 0.0,
+      "prompt": "high quality, { {red; yellow} cat; dog}",
       "negative_prompt": "EasyNegative, nsfw, worst quality, low quality",
       "highres_fix": [
         {
@@ -30,6 +33,11 @@
     "host": "0.0.0.0",
     "port": 0,
     "username": "user",
-    "password": "user"
+    "password": "user",
+    "model_download_presets": {
+      "runwayml/stable-diffusion-v1-5": [
+        ""
+      ]
+    }
   }
 }

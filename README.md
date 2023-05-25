@@ -6,9 +6,11 @@ Simple diffuser daemon with utilities and web UI.
 
 This is for users who
 - use huggingface/diffusers library & models
-- need txt2img loops running on local (especially with MPS) or colab
-- need (some naive but maybe useful) features
+- need txt2img loops running on local (especially with MPS) or colab need (some naive but maybe useful) features
   - prompt weights as WebUI syntax using `()[](:weight)`
+  - random prompt using `{a; b: 1.5}`
+  - random size image
+  - clip skip
   - multistep highres fix
   - textual inversions
 - and need simple UI
@@ -67,6 +69,32 @@ You can
 - Download some models from huggingface.co
 - Add archive ddownload page
 
+## Configurations
+
+All default configurations are placed in `default_config.json`. You can overwrite the configuration by writing in `config.json`.
+
+- password: Daemon password
+- models_root, state_root, outputs_root, archives_root: Daemon directories. Please create them before run the daemon
+- image_format: image format. png/jpeg/webp are tested.
+- save_raw: If true, daemon will create not encoded image file and job infromation in output directory. In this case, someone can access the image via webui without password.
+- init_values
+  - model.path: model path related from models_root
+  - params
+    - width, height: image size in integer it may be the multiple of 8
+    - sampling_method: sampling method, e.g. DPM++ 2M Karras
+    - sampling_steps
+    - cfg_scale
+    - prompt
+    - negative_prompt
+    - highres_fix: Array of highres fix config
+      - scale: Optional, scale of width/height. One of this or width & height must be set.
+      - width, height: Optional, New size of image, ONe of this or scale must be set.
+      - stregth: Strengh of img2img
+- webui
+  - host: hostname
+  - port: port. If it is 0, use random port
+  - model_download_presets: An object of arrays. Key is huggingface repo id, and it's elements are subdirectories. For example, you want to add HF repo "asdf/test-model", put `"asdf/test-model": [""]`. If you want to add HF repo "asdf/zxc" and its subdirectory "model-1", `"asdf/zxc": ["model-1"]`
+
 ## Notes
 
 - To use original SD checkpoint, run `python ./convert_original_stable_diffusion_to_diffusers.py --checkpoint_path ./***.safetensors --from_safetensors --to_safetensors --dump_path ./extracted/path --half` with https://github.com/huggingface/diffusers/blob/36f43ea75ab7cdf9b04f72bced0b1ab22036c21c/scripts/convert_original_stable_diffusion_to_diffusers.py
@@ -75,3 +103,5 @@ You can
 
 ## TODO
 
+- Random weighted prompt
+- Fix model download UIs

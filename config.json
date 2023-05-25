@@ -2,5 +2,11 @@
   "init_values": {
     "params": {
     }
+  },
+  "webui": {
+    "model_download_presets": {
+      "runwayaml/stable-diffusion-v1-5": [
+      ]
+    }
   }
 }
