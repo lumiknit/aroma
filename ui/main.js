@@ -55,6 +55,7 @@ console.log("       - archives_path: " + archives_path);
 
 const webui_host = config.webui.host;
 const webui_port = config.webui.port;
+const webui_model_download_presets = config.webui.model_download_presets;
 
 const daemon_password = config.password;
 const mask = enc.makeMask(daemon_password);
@@ -336,6 +337,11 @@ app.get('/api/daemon/outputs', (req, res) => {
 
 
 // Download Model
+
+app.get('/api/download-model-presets', (req, res) => {
+  res.send(webui_model_download_presets);
+});
+
 let download_ps = [];
 
 // New model download

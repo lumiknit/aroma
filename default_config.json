@@ -30,6 +30,11 @@
     "host": "0.0.0.0",
     "port": 0,
     "username": "user",
-    "password": "user"
+    "password": "user",
+    "model_download_presets": {
+      "runwayml/stable-diffusion-v1-5": [
+        ""
+      ]
+    }
   }
 }

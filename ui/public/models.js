@@ -9,31 +9,35 @@ const appendAlert = (type, message) => {
 };
 
 let models = [];
-const presets = {
-  "runwayml/stable-diffusion-v1-5": [
-    ""
-  ],
-};
+let presets = {};
 
 const loadPresets = () => {
   const tbody = $('#preset-tbody');
   tbody.text('');
   let idx = 1;
-  for(let repoID in presets) {
-    for(let model of presets[repoID]) {
-      let flag = false;
-      for(let existing of models) {
-        if(existing.indexOf(model) != -1) {
-          flag = true;
-          break;
+  // Get to /api/download-model-presets
+  $.get("/api/download-model-presets", (data) => {
+    // Parse json
+    presets = data;
+    console.log(presets);
+    for(let repoID in presets) {
+      for(let model of presets[repoID]) {
+        let flag = false;
+        if(model !== '') {
+          for(let existing of models) {
+            if(existing.indexOf(model) != -1) {
+              flag = true;
+              break;
+            }
+          }
+        }
+        if(!flag) {
+          tbody.append(`<tr><th scope="row">${idx}</th><td>${repoID}<br>${model}</td><td><button class="btn btn-primary" onclick="downloadModel('${repoID}', '${model}')">Download</button></td></tr>`);
+          idx += 1;
         }
       }
-      if(!flag) {
-        tbody.append(`<tr><th scope="row">${idx}</th><td>${repoID}</td><td>${model}</td><td><button class="btn btn-primary" onclick="downloadModel('${repoID}', '${model}')">Download</button></td></tr>`);
-      }
-      idx += 1;
     }
-  }
+  });
 };
 
 const loadAllModelsAndPresets = () => {
