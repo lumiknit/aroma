@@ -16,7 +16,6 @@ def read_and_truncate_as(path, w=""):
     return r
 
 
-
 def merge_dict(dst, src):
     for k in src:
         if k in dst and isinstance(dst[k], dict):
@@ -105,7 +104,7 @@ class State:
             with open(path, "r") as f:
                 merge_dict(d, json.load(f))
         return cls(d)
-    
+
     def merge_current_job(self):
         # Check if current job exists
         p = f"{self.state_root}/current_job.json"
@@ -184,7 +183,10 @@ class State:
             f.write(json.dumps(self.job))
         # If save_raw is enabled, save files to disk
         if self.save_raw:
-            img.save(f"{self.outputs_root}/{file_prefix}.{self.image_format}", quality=self.image_quality)
+            img.save(
+                f"{self.outputs_root}/{file_prefix}.{self.image_format}",
+                quality=self.image_quality,
+            )
             self.save_values(f"{self.outputs_root}/{file_prefix}.json")
         # Write encoded output
         if img is not None:

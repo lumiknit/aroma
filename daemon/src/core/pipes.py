@@ -38,7 +38,10 @@ class SDPipes:
         self.img2img = None
 
     def _load_model(
-        self, state, path, dtype=torch.float16,
+        self,
+        state,
+        path,
+        dtype=torch.float16,
         clip_skip=0,
     ):
         # Create kwargs
@@ -72,16 +75,20 @@ class SDPipes:
                 path,
                 torch_dtype=dtype,
                 subfolder="text_encoder",
-                num_hidden_layers=(txt2img.text_encoder.config.num_hidden_layers - clip_skip),
+                num_hidden_layers=(
+                    txt2img.text_encoder.config.num_hidden_layers - clip_skip
+                ),
                 local_files_only=True,
             )
-        print(f"[INFO] CLIP num hidden layers = {txt2img.text_encoder.config.num_hidden_layers}")
+        print(
+            f"[INFO] CLIP num hidden layers = {txt2img.text_encoder.config.num_hidden_layers}"
+        )
 
         # Disable safety checker for performance
         txt2img.safety_checker = None
 
         # Load Textual Inversion
-        for (root, dirs, files) in os.walk(state.models_root):
+        for root, dirs, files in os.walk(state.models_root):
             # Check if root is textual inversion root
             base = os.path.basename(root)
             base.lower()
@@ -90,16 +97,20 @@ class SDPipes:
                 print(f"[INFO] Found textual inversion root {root}")
                 for f in files:
                     ti_path = os.path.join(root, f)
-                    if ti_path.endswith('.pt') or ti_path.endswith('.safetensors'):
+                    if ti_path.endswith(".pt") or ti_path.endswith(".safetensors"):
                         token = pathlib.Path(ti_path).stem
-                        print(f"[INFO] Loading textual inversion from {path} as {token}")
+                        print(
+                            f"[INFO] Loading textual inversion from {path} as {token}"
+                        )
                         try:
                             txt2img.load_textual_inversion(
                                 ti_path,
                                 token=token,
                             )
                         except Exception as e:
-                            print(f"[WARNING] Cannot load textual inversion {ti_path}: {e}")
+                            print(
+                                f"[WARNING] Cannot load textual inversion {ti_path}: {e}"
+                            )
                             print(f"[WARINIG] just ignore {token}")
 
         # Send to device
@@ -256,7 +267,6 @@ class SDPipes:
         state.write_state("setup_params", {})
         kwargs = {}
 
-
         # Check params and generate
         kwargs["num_inference_steps"] = params["sampling_steps"]
         kwargs["guidance_scale"] = params["cfg_scale"]
@@ -393,8 +403,10 @@ class SDPipes:
         # If model changed, run from reload model
         print(f"A: {self.model_path}")
         print(f"B: {state.models_root}/{values['model']['path']}")
-        if self.model_path != f"{state.models_root}/{values['model']['path']}" \
-            or self.clip_skip != values['model']["clip_skip"]:
+        if (
+            self.model_path != f"{state.models_root}/{values['model']['path']}"
+            or self.clip_skip != values["model"]["clip_skip"]
+        ):
             return self._txt2img_load_model(state)
         # Otherwise, run from update_prompt
         return self._txt2img_update_prompt(state)
