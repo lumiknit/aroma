@@ -81,24 +81,46 @@
         Download Model
       </h5>
       <div class="card-body p-2">
+        <h6> Download Base Model </h6>
         Repo ID: Huggingface Repo (organization/repo)
         <div class="row mb-1 g-1">
-          <div class="col-12 col-md-6">
+          <div class="col-12 col-md-8">
             <div class="input-group">
               <span class="input-group-text"> Repo ID </span>
               <input type="text" step="1" id="dl-model-repo-id" class="form-control" placeholder="org/repo">
             </div>
           </div>
-          <div class="col-12 col-md-6">
+          <div class="col-12 col-md-4">
             <div class="input-group">
               <span class="input-group-text"> Subdir </span>
-              <input type="text" step="1" id="dl-model-subdir" class="form-control" placeholder="model-a">
+              <input type="text" step="1" id="dl-model-repo-id" class="form-control" placeholder="model-a">
             </div>
           </div>
         </div>
         <div class="row">
           <div class="col-12">
-            <button type="button" class="btn btn-block w-100 btn-primary" onclick="downloadClick()"> Download </button>
+            <button type="button" class="btn btn-block w-100 btn-primary" onclick="downloadModelClick()"> Download Model </button>
+          </div>
+        </div>
+        <hr>
+        <h6> Download Lora Model </h6>
+        Download URL (e.g. <a href="https://civitai.com"> civitai</a>)
+        <div class="row mb-1 g-1">
+          <div class="col-12 col-md-8">
+            <div class="input-group">
+              <span class="input-group-text"> URL </span>
+              <input type="text" step="1" id="dl-lora-url" class="form-control" placeholder="https://civitai.com/api/download/models/0">
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="input-group">
+              <span class="input-group-text"> Name </span>
+              <input type="text" step="1" id="dl-lora-name" class="form-control" placeholder="my-lora"> </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <button type="button" class="btn btn-block w-100 btn-warning" onclick="downloadLoraClick()"> Download LoRa </button>
           </div>
         </div>
 

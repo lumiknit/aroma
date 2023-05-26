@@ -46,7 +46,7 @@ const loadAllModelsAndPresets = () => {
     let list = $('#model-list');
     list.text('');
     data.sort().forEach((model) => {
-      list.append($(`<div class="card col-6 col-sm-4 col-md-3 col-lg-2"><div class="card-body p-1">` + model + `</div></div>`));
+      list.append($(`<div class="card col-6 col-sm-4 col-md-3 col-lg-2"><div class="card-body p-1"><small>` + model + `</small></div></div>`));
     });
     // Set global var
     models = data;
@@ -54,7 +54,7 @@ const loadAllModelsAndPresets = () => {
   });
 };
 
-const downloadClick = () => {
+const downloadModelClick = () => {
   let repoID = $('#dl-model-repo-id').val();
   let subDir = $('#dl-model-subdir').val();
   return downloadModel(repoID, subDir);
@@ -67,7 +67,24 @@ const downloadModel = (repoID, subdir) => {
     subdir: subdir,
   }), (data) => {
     console.log(data);
-    appendAlert('info', `Downloading ${repoID}:${subdir}...`);
+    appendAlert('info', `Downloading Model ${repoID}:${subdir}...`);
+  });
+};
+
+const downloadLoraClick = () => {
+  let url = $('#dl-lora-url').val();
+  let name = $('#dl-lora-name').val();
+  return downloadLora(url, name);
+};
+
+const downloadLora = (url, name) => {
+  // POST to /api/download-model
+  $.post("/api/download-lora", JSON.stringify({
+    url: url,
+    name: name,
+  }), (data) => {
+    console.log(data);
+    appendAlert('info', `Downloading LoRa ${url}...`);
   });
 };
 

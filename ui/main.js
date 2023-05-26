@@ -428,6 +428,58 @@ app.post('/api/download-model', (req, res) => {
   });
 });
 
+// New model download
+app.post('/api/download-lora', (req, res) => {
+  // Parse body as JSON
+  let body = "";
+  req.on('data', (chunk) => {
+    body += chunk.toString();
+  });
+  req.on('end', async () => {
+    console.log("[INFO] Received model: " + body);
+    var json;
+    try {
+      json = JSON.parse(body);
+    } catch(e) {
+      res.status(400).send("Invalid JSON");
+      return;
+    }
+    const url = json.url;
+    const name = json.name;
+    // Create process
+    // mkdir to model_path/lora
+    let out_path = models_path + "/lora";
+    if(!fs.existsSync(out_path)) {
+      fs.mkdirSync(out_path, {recursive: true});
+    }
+    let filename = name + ".safetensors";
+    let ps = child_process.spawn(
+      "curl", ["-L", "-o", out_path + "/" + filename, url]);
+    let repo_id = url;
+    let subdir = "lora/" + filename;
+    let obj = {
+      repo_id: repo_id,
+      subdir: subdir,
+      ps: ps,
+      out: "",
+    };
+    // Add to download ps
+    download_ps.push(obj);
+    ps.stdout.on('data', (data) => {
+      obj.out += data.toString();
+    });
+    ps.stderr.on('data', (data) => {
+      obj.out += data.toString();
+    });
+    ps.on('exit', (code) => {
+      // Remove from download ps
+      console.log("[INFO] Downloading model: Done (" + repo_id + ", " + subdir + ")");
+      download_ps = download_ps.filter((x) => x["repo_id"] != repo_id || x["subdir"] != subdir);
+    });
+    res.send("OK");
+  });
+});
+
 // Get download status
 app.get('/api/download-model', (req, res) => {
   let lst = [];
