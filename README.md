@@ -13,6 +13,7 @@ This is for users who
   - clip skip
   - multistep highres fix
   - textual inversions
+  - Load lora safetensors
 - and need simple UI
   - bootstrap5
   - gallery
@@ -103,5 +104,8 @@ All default configurations are placed in `default_config.json`. You can overwrit
 
 ## TODO
 
-- Random weighted prompt
-- Fix model download UIs
+- Non-safetensor LoRa Support
+- Optimize Lora Weight Change
+- Optimize LoRa Download
+- Support multi-lora and UI
+- Support Highres Fix UI
