@@ -1,0 +1,23 @@
+name: aroma
+channels:
+- pytorch
+- conda-forge
+dependencies:
+- python=3.9
+- pytorch=1.12.1
+- torchvision
+- torchaudio
+- cudatoolkit=11.3
+- pytorch-lightning
+- numpy
+- pillow
+- scipy
+- ftfy
+- pip
+- pip:
+  - huggingface_hub
+  - transformers
+  - diffusers==0.16.1
+  - accelerate==0.18.0
+  - safetensors
+  - omegaconf

@@ -18,15 +18,15 @@ def process_random_prompts(text):
     "Convert prompts containing random choose to fixed prompts"
     if not isinstance(text, str):
         raise Exception("Invalid text (expect str)")
-    p_stack = ['']
+    p_stack = [""]
     stack = [[("", 1)]]
     i = 0
     while i < len(text):
         c = text[i]
-        is_choice = p_stack[-1] == '}'
+        is_choice = p_stack[-1] == "}"
         if c == "{":
             # Insert new stack
-            p_stack.append('}')
+            p_stack.append("}")
             stack.append([("", 1)])
         elif is_choice and c == ";":
             # Add to next choice
@@ -37,8 +37,10 @@ def process_random_prompts(text):
             num = ""
             c = text[j]
             while j < len(text):
-                if c == "." or c.isdigit(): num += c
-                elif c > " ": break
+                if c == "." or c.isdigit():
+                    num += c
+                elif c > " ":
+                    break
                 j += 1
                 c = text[j]
             i = j - 1
@@ -59,9 +61,9 @@ def process_random_prompts(text):
             last = stack[-1][-1]
             stack[-1][-1] = (last[0] + c, last[1])
             if c == "(":
-                p_stack.append(')')
+                p_stack.append(")")
             elif c == "[":
-                p_stack.append(']')
+                p_stack.append("]")
             elif p_stack[-1] == c:
                 p_stack.pop()
         i += 1
@@ -105,8 +107,10 @@ def text_to_weighted_list(text):
             num = ""
             c = text[j]
             while j < len(text):
-                if c == "." or c.isdigit(): num += c
-                elif c > " ": break
+                if c == "." or c.isdigit():
+                    num += c
+                elif c > " ":
+                    break
                 j += 1
                 c = text[j]
             i = j - 1

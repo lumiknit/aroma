@@ -156,6 +156,45 @@ app.get('/api/models', async (req, res) => {
   }));
 });
 
+const traverseLoras = async (result, base, dir) => {
+  // Is lora directory?
+  let is_lora_dir = dir.toLowerCase().indexOf("lora") != -1;
+  let files;
+  try {
+    files = await fs.promises.readdir(base + "/" + dir);
+  } catch(e) {
+    console.log("Failed to readdir: " + dir, e);
+    return;
+  }
+  for(let file of files) {
+    let sub = dir + "/" + file;
+    if(sub[0] === "/") {
+      sub = sub.substr(1);
+    }
+    if(is_lora_dir && file.endsWith(".safetensors")) {
+      result.push(sub);
+    }
+    try {
+      let stat = await fs.promises.stat(base + "/" + sub);
+      if(stat.isDirectory()) {
+        await traverseLoras(result, base, sub);
+      }
+    } catch(e) {
+      console.log("Failed to stat: " + sub);
+    }
+  }
+};
+
+app.get('/api/loras', async (req, res) => {
+  // Return all diffusers models in models output
+  // It'll return only subpath from models_path, 
+  let result = [];
+  await traverseLoras(result, models_path, "");
+  res.send(result.map((path) => {
+    return path.replace(models_path + "/", "");
+  }));
+});
+
 app.delete('/api/outputs/:filename', (req, res) => {
   // Delete specific image and json file in outputs_path
   let filename = req.params.filename;
@@ -366,6 +405,58 @@ app.post('/api/download-model', (req, res) => {
     let out_path = models_path + "/" + repo_id;
     let ps = child_process.spawn(
       "bash", ["daemon/download-hf-snapshot.sh", out_path, repo_id, subdir]);
+    let obj = {
+      repo_id: repo_id,
+      subdir: subdir,
+      ps: ps,
+      out: "",
+    };
+    // Add to download ps
+    download_ps.push(obj);
+    ps.stdout.on('data', (data) => {
+      obj.out += data.toString();
+    });
+    ps.stderr.on('data', (data) => {
+      obj.out += data.toString();
+    });
+    ps.on('exit', (code) => {
+      // Remove from download ps
+      console.log("[INFO] Downloading model: Done (" + repo_id + ", " + subdir + ")");
+      download_ps = download_ps.filter((x) => x["repo_id"] != repo_id || x["subdir"] != subdir);
+    });
+    res.send("OK");
+  });
+});
+
+// New model download
+app.post('/api/download-lora', (req, res) => {
+  // Parse body as JSON
+  let body = "";
+  req.on('data', (chunk) => {
+    body += chunk.toString();
+  });
+  req.on('end', async () => {
+    console.log("[INFO] Received model: " + body);
+    var json;
+    try {
+      json = JSON.parse(body);
+    } catch(e) {
+      res.status(400).send("Invalid JSON");
+      return;
+    }
+    const url = json.url;
+    const name = json.name;
+    // Create process
+    // mkdir to model_path/lora
+    let out_path = models_path + "/lora";
+    if(!fs.existsSync(out_path)) {
+      fs.mkdirSync(out_path, {recursive: true});
+    }
+    let filename = name + ".safetensors";
+    let ps = child_process.spawn(
+      "curl", ["-L", "-o", out_path + "/" + filename, url]);
+    let repo_id = url;
+    let subdir = "lora/" + filename;
     let obj = {
       repo_id: repo_id,
       subdir: subdir,
