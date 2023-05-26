@@ -195,7 +195,9 @@ const reuseImageSettings = (name) => {
   let config = image_map[name].a.values;
   // Set config
   $('#config-model-path').val(config.config.model.path);
+  $('#config-lora-path').val(config.config.model.lora_path);
   $('#config-clip-skip').val(config.config.model.clip_skip);
+  $('#config-lora-alpha').val(config.config.model.lora_alpha);
   $('#config-sampling-method').val(config.config.params.sampling_method);
   $('#config-sampling-steps').val(config.config.params.sampling_steps);
   $('#config-cfg-scale').val(config.config.params.cfg_scale);
@@ -206,6 +208,7 @@ const reuseImageSettings = (name) => {
   $('#config-prompt').val(config.config.params.prompt);
   $('#config-negative-prompt').val(config.config.params.negative_prompt);
   let cloned = JSON.parse(JSON.stringify(config.config.params));
+  delete cloned.lora_alpha;
   delete cloned.sampling_steps;
   delete cloned.cfg_scale;
   delete cloned.width;
@@ -361,13 +364,15 @@ const reload = () => {
       if(data.values !== undefined) {
         if(data.values.model !== undefined) {
           $('#config-model-path').attr("placeholder", data.values.model.path);
+          $('#config-lora-path').attr("placeholder", data.values.model.lora_path);
+          $('#config-clip-skip').attr("placeholder", data.values.model.clip_skip);
         }
         if(data.values.params !== undefined) {
           let new_text = "Current: " + data.values.params.sampling_method;
+          $('#config-lora-alpha').attr("placeholder", data.values.model.lora_alpha);
           if($('#config-sampling-method-current').text() !== new_text) {
             $('#config-sampling-method-current').text(new_text);
           }
-          $('#config-clip-skip').attr("placeholder", data.values.model.clip_skip);
           $('#config-sampling-steps').attr("placeholder", data.values.params.sampling_steps);
           $('#config-cfg-scale').attr("placeholder", data.values.params.cfg_scale);
           $('#config-width').attr("placeholder", data.values.params.width);
@@ -444,6 +449,26 @@ const loadAllModels = () => {
   });
 };
 
+const setLora = (model) => {
+  if(model === undefined) {
+    $('#config-lora-path').val('-');
+  } else {
+    $('#config-lora-path').val(model);
+  }
+};
+
+const loadAllLoras = () => {
+  $.get("/api/loras", (data) => {
+    // Set dropdown
+    let list = $('#loras-dropdown-list');
+    list.text('');
+    list.append($(`<li><a class="dropdown-item" href="#" onclick="setLora(undefined)"> NONE </a></li>`));
+    data.sort().forEach((model) => {
+      list.append($(`<li><a class="dropdown-item" href="#" onclick="setLora('` + model + `')">` + model + `</a></li>`));
+    });
+  });
+};
+
 const applyConfig = () => {
   // Read other config
   let values = {
@@ -465,11 +490,21 @@ const applyConfig = () => {
   if(mcs.length > 0) {
     let clip_skip = parseInt(mcs);
     if(isNaN(clip_skip) || clip_skip < 0 || clip_skip > 10) {
-      appendAlert("danger", "Invalid clip skip: " + cs);
+      appendAlert("danger", "Invalid clip skip: " + mcs);
       return;
     }
     values.model.clip_skip = clip_skip;
     changed.push("clip_skip");
+  }
+  let lw = $('#config-lora-alpha').val().trim();
+  if(lw.length > 0) {
+    let lora_alpha = parseFloat(lw);
+    if(isNaN(lora_alpha)) {
+      appendAlert("danger", "Invalid LoRa Alpha: " + lw);
+      return;
+    }
+    values.model.lora_alpha = lora_alpha;
+    changed.push("lora_alpha");
   }
   // Read sampling method
   let sm = $('#config-sampling-method').val().trim();
@@ -564,6 +599,15 @@ const applyConfig = () => {
     values.model.path = mp;
     changed.push("model_path");
   }
+  // Read lora path
+  let lp = $('#config-lora-path').val().trim();
+  if(lp === "-") {
+    values.model.lora_path = "";
+    changed.push("lora_path");
+  } else if(lp.length > 0) {
+    values.model.lora_path = lp;
+    changed.push("lora_path");
+  }
   // Encode
   let encoded = JSON.stringify(values);
   encoded = aromaEncode(mask, encoded);
@@ -578,6 +622,8 @@ const applyConfig = () => {
       // Reset all fields
       $('#config-model-path').val("");
       $('#config-clip-skip').val("");
+      $('#config-lora-path').val("");
+      $('#config-lora-alpha').val("");
       $('#config-sampling-method').val("Default");
       $('#config-sampling-steps').val("");
       $('#config-cfg-scale').val("");
@@ -655,6 +701,7 @@ const updatePassword = (showAlert) => {
 const setUpEventHandlers = () => {
   const textboxes = [
     '#config-clip-skip',
+    '#config-lora-alpha',
     '#config-sampling-steps',
     '#config-cfg-scale',
     '#config-width',
@@ -697,6 +744,7 @@ $(() => {
   updatePassword(false);
   // Load models
   loadAllModels();
+  loadAllLoras();
   // Load gallery
   loadAllGallery();
   // Create interval to reload gallery

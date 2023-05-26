@@ -156,6 +156,45 @@ app.get('/api/models', async (req, res) => {
   }));
 });
 
+const traverseLoras = async (result, base, dir) => {
+  // Is lora directory?
+  let is_lora_dir = dir.toLowerCase().indexOf("lora") != -1;
+  let files;
+  try {
+    files = await fs.promises.readdir(base + "/" + dir);
+  } catch(e) {
+    console.log("Failed to readdir: " + dir, e);
+    return;
+  }
+  for(let file of files) {
+    let sub = dir + "/" + file;
+    if(sub[0] === "/") {
+      sub = sub.substr(1);
+    }
+    if(is_lora_dir && file.endsWith(".safetensors")) {
+      result.push(sub);
+    }
+    try {
+      let stat = await fs.promises.stat(base + "/" + sub);
+      if(stat.isDirectory()) {
+        await traverseLoras(result, base, sub);
+      }
+    } catch(e) {
+      console.log("Failed to stat: " + sub);
+    }
+  }
+};
+
+app.get('/api/loras', async (req, res) => {
+  // Return all diffusers models in models output
+  // It'll return only subpath from models_path, 
+  let result = [];
+  await traverseLoras(result, models_path, "");
+  res.send(result.map((path) => {
+    return path.replace(models_path + "/", "");
+  }));
+});
+
 app.delete('/api/outputs/:filename', (req, res) => {
   // Delete specific image and json file in outputs_path
   let filename = req.params.filename;
