@@ -10,7 +10,8 @@
   "init_values": {
     "model": {
       "path": "",
-      "clip_skip": 0
+      "clip_skip": 0,
+      "lora_path": ""
     },
     "params": {
       "width": 280,
@@ -18,6 +19,7 @@
       "sampling_method": "Default",
       "sampling_steps": 25,
       "cfg_scale": 8,
+      "lora_weight": 0.0,
       "seed": "",
       "size_range": 0.0,
       "prompt": "high quality, { {red; yellow} cat; dog}",
