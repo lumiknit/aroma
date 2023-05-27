@@ -1,13 +1,3 @@
-const appendAlert = (type, message) => {
-  let html = `
-    <div class="shadow alert alert-` + type + ` alert-dismissible mt-2 fade show" role="alert">
-      ` + message + `
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  `;
-  $('#alert-placeholder').append(html);
-};
-
 let models = [];
 let presets = {};
 
@@ -46,7 +36,7 @@ const loadAllModelsAndPresets = () => {
     let list = $('#model-list');
     list.text('');
     data.sort().forEach((model) => {
-      list.append($(`<div class="card col-6 col-sm-4 col-md-3 col-lg-2"><div class="card-body p-1"><small>` + model + `</small></div></div>`));
+      list.append($(`<div class="card col-6 col-sm-4 col-md-3 col-lg-2"><div class="card-body p-1"><small>${model}</small></div></div>`));
     });
     // Set global var
     models = data;

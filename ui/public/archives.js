@@ -11,7 +11,7 @@ const loadArchives = () => {
       list.empty();
       for(let archive of data) {
         const item = $('<li class="list-group-item"></li>');
-        const link = $('<a href="/aroma-static/archives/' + archive + '">' + archive + '</a>');
+        const link = $(`<a href="/aroma-static/archives/${archive}">${archive}</a>`);
         item.append(link);
         list.append(item);
         console.log(archive);
