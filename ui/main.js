@@ -403,7 +403,7 @@ const addDownloadPS = (ps, repoID, subdir) => {
   ps.on('exit', (code) => {
     // Remove from download ps
     console.log("[INFO] Downloading model: Done (" + repoID + ", " + subdir + ")");
-    downloadPS = downloadPS.filter((x) => x.repoID != repo_id || x.subdir != subdir);
+    downloadPS = downloadPS.filter((x) => x.repoID != repoID || x.subdir != subdir);
   });
 };
 
