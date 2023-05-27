@@ -428,7 +428,7 @@ app.post('/api/download-model', (req, res) => {
     // Create process
     let outPath = modelsPath + "/" + repoID;
     let ps = child_process.spawn(
-      "bash", ["daemon/download-hf-snapshot.sh", out_path, repoID, subdir]);
+      "bash", ["daemon/download-hf-snapshot.sh", outPath, repoID, subdir]);
     addDownloadPS(ps, repoID, subdir);
     res.send("OK");
   });
