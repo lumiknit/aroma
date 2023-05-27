@@ -22,6 +22,7 @@ def main():
     snapshot_download(
         hf_repo_id,
         local_dir=output_dir,
+        local_dir_use_symlinks=False,
         resume_download=True,
         allow_patterns=allow_patterns,
     )
