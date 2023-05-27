@@ -136,8 +136,12 @@ const loadImageDataByName = (name) => {
 };
 
 const reloadAllImageData = () => {
+  const loadLoader = (name) => {
+    return () => loadImageDataByName(name);
+  };
   for(let name in imageMap) {
-    loadImageDataByName(name);
+    // Run async
+    setTimeout(loadLoader(name), 0);
   }
 };
 
