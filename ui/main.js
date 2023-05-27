@@ -391,7 +391,7 @@ const addDownloadPS = (ps, repoID, subdir) => {
     repoID: repoID,
     subdir: subdir,
     ps: ps,
-    started: new Date(),
+    out: "",
   };
   downloadPS.push(obj);
   ps.stdout.on('data', (data) => {
@@ -473,9 +473,9 @@ app.get('/api/download-model', (req, res) => {
   let lst = [];
   for(let obj of downloadPS) {
     lst.push({
-      repo_id: obj["repo_id"],
-      subdir: obj["subdir"],
-      out: obj["out"].slice(-200),
+      repo_id: obj.repoID,
+      subdir: obj.subdir,
+      out: obj.out.slice(-200),
     });
   }
   res.send(JSON.stringify(lst));
