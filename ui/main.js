@@ -1,3 +1,5 @@
+// Load modeuls
+
 const child_process = require('child_process');
 const fs = require('fs');
 const express = require('express');
@@ -10,6 +12,7 @@ console.log(enc.aromaEncode(enc.makeMask("test"), "abc"));
 // Helpers
 
 const mergeObject = (dst, src) => {
+  // Merge src into dst
   for(let key in src) {
     // If value is an object, merge recursively
     if(typeof src[key] == "object" && !Array.isArray(src[key])) {
@@ -24,41 +27,51 @@ const mergeObject = (dst, src) => {
   return dst;
 };
 
-// Find script path
-const cdToRepoRoot = () => {
-  // Move to aroma repo root
+const currentDateInFormat = () => {
+  // Return now as a format yymmdd-hhmmss
+  let now = new Date();
+  let year = ("00" + now.getFullYear()).slice(-2);
+  let month = ("00" + now.getMonth()).slice(-2);
+  let date = ("00" + now.getDate()).slice(-2);
+  let hour = ("00" + now.getHours()).slice(-2);
+  let min = ("00" + now.getMinutes()).slice(-2);
+  let sec = ("00" + now.getSeconds()).slice(-2);
+  return year + "" + month + "" + date + "-" + hour + "" + min + "" + sec;
+};
+
+// -- Initialization
+// Move to script path
+(() => {
   let base = __dirname;
   process.chdir(base + "/..");
-};
-cdToRepoRoot();
-
+})();
 console.log("[NOTE] Current directory: " + process.cwd());
 
 // Read config.json
 console.log("[INFO] Reading config.json...");
-const default_config_json = fs.readFileSync('default_config.json', 'utf8');
-const default_config = JSON.parse(default_config_json);
+const defaultConfigJson = fs.readFileSync('default_config.json', 'utf8');
+const defaultConfig = JSON.parse(defaultConfigJson);
 
-const config_json = fs.readFileSync('config.json', 'utf8');
-const config = mergeObject(default_config, JSON.parse(config_json));
+const configJson = fs.readFileSync('config.json', 'utf8');
+const config = mergeObject(defaultConfig, JSON.parse(configJson));
 
-const models_path = config.models_root;
-const outputs_path = config.outputs_root;
-const state_path = config.state_root;
-const archives_path = config.archives_root;
+const modelsPath = config.models_root;
+const outputsPath = config.outputs_root;
+const statePath = config.state_root;
+const archivesPath = config.archives_root;
 
 console.log("[NOTE] Paths:");
-console.log("       - models_path: " + models_path);
-console.log("       - outputs_path: " + outputs_path);
-console.log("       - state_path: " + state_path);
-console.log("       - archives_path: " + archives_path);
+console.log("       - models_path: " + modelsPath);
+console.log("       - outputs_path: " + outputsPath);
+console.log("       - state_path: " + statePath);
+console.log("       - archives_path: " + archivesPath);
 
-const webui_host = config.webui.host;
-const webui_port = config.webui.port;
-const webui_model_download_presets = config.webui.model_download_presets;
+const webuiHost = config.webui.host;
+const webuiPort = config.webui.port;
+const webuiModelDownloadPresets = config.webui.model_download_presets;
 
-const daemon_password = config.password;
-const mask = enc.makeMask(daemon_password);
+const daemonPassword = config.password;
+const mask = enc.makeMask(daemonPassword);
 
 // Create each directory if not exists
 const createDirIfNotExists = (dir) => {
@@ -66,24 +79,24 @@ const createDirIfNotExists = (dir) => {
     fs.mkdirSync(dir, {recursive: true});
   }
 };
-createDirIfNotExists(models_path);
-createDirIfNotExists(outputs_path);
-createDirIfNotExists(state_path);
-createDirIfNotExists(archives_path);
+createDirIfNotExists(modelsPath);
+createDirIfNotExists(outputsPath);
+createDirIfNotExists(statePath);
+createDirIfNotExists(archivesPath);
 
 
 // --- Create express.js app
 const app = express();
 
 // - Static files
-app.use('/aroma-static/archives/', express.static(archives_path));
-app.use('/aroma-static/outputs', express.static(outputs_path));
+app.use('/aroma-static/archives/', express.static(archivesPath));
+app.use('/aroma-static/outputs', express.static(outputsPath));
 app.use('/static', express.static(__dirname + "/public"));
 
 // Status
 app.get('/aroma-static/state/:filename', async (req, res) => {
   let filename = req.params.filename;
-  let fullpath = state_path + "/" + filename;
+  let fullpath = statePath + "/" + filename;
   if(!fs.existsSync(fullpath)) {
     res.status(404).send("Not found");
     return;
@@ -96,32 +109,32 @@ app.get('/aroma-static/state/:filename', async (req, res) => {
 
 // - APIs
 
-app.get('/', (req, res) => {
+// Set index page
+const indexHandler = (req, res) => {
   res.redirect('/static/index.html');
-});
-app.get('/home', (req, res) => {
-  res.redirect('/static/index.html');
-});
-app.get('/index.html', (req, res) => {
-  res.redirect('/static/index.html');
-});
+};
+app.get('/', indexHandler);
+app.get('/home', indexHandler);
+app.get('/index', indexHandler);
+app.get('/index.html', indexHandler);
 
+// Get archive list
 app.get('/api/archives', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  fs.readdir(archives_path, (err, files) => {
+  fs.readdir(archivesPath, (err, files) => {
     res.send(files);
   });
 });
 
-
+// Get output list
 app.get('/api/outputs', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  fs.readdir(outputs_path, (err, files) => {
+  fs.readdir(outputsPath, (err, files) => {
     let a = [];
     for(let file of files) {
       let ext = path.extname(file);
       if(ext === ".a") {
-        a.push(file.substr(0, file.lastIndexOf(".")));
+        a.push(file.substring(0, file.lastIndexOf(".")));
       }
     }
     res.send(a);
@@ -150,15 +163,15 @@ app.get('/api/models', async (req, res) => {
   // Return all diffusers models in models output
   // It'll return only subpath from models_path, 
   let result = [];
-  await traverseModels(result, models_path);
+  await traverseModels(result, modelsPath);
   res.send(result.map((path) => {
-    return path.replace(models_path + "/", "");
+    return path.replace(modelsPath + "/", "");
   }));
 });
 
 const traverseLoras = async (result, base, dir) => {
   // Is lora directory?
-  let is_lora_dir = dir.toLowerCase().indexOf("lora") != -1;
+  let isLoraDir = dir.toLowerCase().indexOf("lora") != -1;
   let files;
   try {
     files = await fs.promises.readdir(base + "/" + dir);
@@ -169,9 +182,9 @@ const traverseLoras = async (result, base, dir) => {
   for(let file of files) {
     let sub = dir + "/" + file;
     if(sub[0] === "/") {
-      sub = sub.substr(1);
+      sub = sub.substring(1);
     }
-    if(is_lora_dir && file.endsWith(".safetensors")) {
+    if(isLoraDir && file.endsWith(".safetensors")) {
       result.push(sub);
     }
     try {
@@ -189,9 +202,9 @@ app.get('/api/loras', async (req, res) => {
   // Return all diffusers models in models output
   // It'll return only subpath from models_path, 
   let result = [];
-  await traverseLoras(result, models_path, "");
+  await traverseLoras(result, modelsPath, "");
   res.send(result.map((path) => {
-    return path.replace(models_path + "/", "");
+    return path.replace(modelsPath + "/", "");
   }));
 });
 
@@ -206,9 +219,9 @@ app.delete('/api/outputs/:filename', (req, res) => {
   }
   // Delete file
   let name = filename + ".a";
-  console.log("[INFO] Deleting file: " + outputs_path + "/" + name);
+  console.log("[INFO] Deleting file: " + outputsPath + "/" + name);
 
-  fs.unlink(outputs_path + "/" + name, (err) => {
+  fs.unlink(outputsPath + "/" + name, (err) => {
     if(err) {
       res.status(500).send("Cannot delete file");
       return;
@@ -226,18 +239,19 @@ app.put('/api/values', (req, res) => {
   });
   req.on('end', async () => {
     console.log("[INFO] Received values: " + body);
-    var is_json = false;
+    var isJson = false;
     var json;
     try {
       json = JSON.parse(body);
-      is_json = true;
+      isJson = true;
     } catch(e) {
+      console.log("Failed to parse JSON: " + body);
     }
-    if(is_json) {
+    if(isJson) {
       // Read current values
       let values = "{}";
       try {
-        await fs.promises.readFile(state_path + "/values.json", 'utf8');
+        await fs.promises.readFile(statePath + "/values.json", 'utf8');
       } catch(e) {
         console.log("Failed to read values.json. Use empty one");
       }
@@ -251,29 +265,18 @@ app.put('/api/values', (req, res) => {
         values = JSON.stringify(json);
       }
       // Write to file
-      await fs.promises.writeFile(state_path + "/values.json", values);
+      await fs.promises.writeFile(statePath + "/values.json", values);
       res.send("OK");
     } else {
       // Otherwise, just append to values after strip
       body = body.trim();
-      await fs.promises.appendFile(state_path + "/values.as", body + "\n");
+      await fs.promises.appendFile(statePath + "/values.as", body + "\n");
       res.send("OK");
     }
   });
 });
 
 // Archive APIs
-const currentDateInFormat = () => {
-  // Return now as a format yymmdd-hhmmss
-  let now = new Date();
-  let year = ("00" + now.getFullYear()).slice(-2);
-  let month = ("00" + now.getMonth()).slice(-2);
-  let date = ("00" + now.getDate()).slice(-2);
-  let hour = ("00" + now.getHours()).slice(-2);
-  let min = ("00" + now.getMinutes()).slice(-2);
-  let sec = ("00" + now.getSeconds()).slice(-2);
-  return year + "" + month + "" + date + "-" + hour + "" + min + "" + sec;
-};
 
 app.post('/api/outputs/archive', (req, res) => {
   console.log("[INFO] Archive and clean...");
@@ -281,21 +284,21 @@ app.post('/api/outputs/archive', (req, res) => {
   let filename = "out-" + currentDateInFormat() + ".tar.gz";
   let ps = child_process.spawn("tar",
     [ "-czf",
-      archives_path + "/" + filename,
-      "-C", outputs_path,
+      archivesPath + "/" + filename,
+      "-C", outputsPath,
       "."]);
   ps.on('close', (code) => {
     if(code != 0) {
       res.status(500).send("Cannot create archive");
       return;
     }
-    fs.readdir(outputs_path, (err, files) => {
+    fs.readdir(outputsPath, (err, files) => {
       for(let file of files) {
-        let p = path.join(outputs_path, file);
+        let p = path.join(outputsPath, file);
         console.log("[INFO] Deleting file: " + p)
         fs.unlink(p, (err) => {});
       }
-      let p = path.join(state_path, "last_job.json");
+      let p = path.join(statePath, "last_job.json");
       console.log("[INFO] Deleting file: " + p)
       fs.unlink(p, (err) => {});
       res.send("OK");
@@ -304,44 +307,44 @@ app.post('/api/outputs/archive', (req, res) => {
 });
 
 // Daemon APIs
-let daemon_ps = undefined;
-let daemon_outputs = "";
+let daemonPS = undefined;
+let daemonOutputs = "";
 
 const killDaemon = () => {
-  if(daemon_ps !== undefined) {
-    console.log("[INFO] Killing daemon... (pid = " + daemon_ps.pid + ")");
-    daemon_ps.stdin.pause();
-    daemon_ps.kill('SIGTERM');
-    daemon_ps = undefined;
+  if(daemonPS !== undefined) {
+    console.log("[INFO] Killing daemon... (pid = " + daemonPS.pid + ")");
+    daemonPS.stdin.pause();
+    daemonPS.kill('SIGTERM');
+    daemonPS = undefined;
     return true;
   }
   return false;
 };
 
 const startDaemon = () => {
-  daemon_outputs = "";
+  daemonOutputs = "";
   console.log("[INFO] Starting daemon...");
-  daemon_ps = child_process.spawn("bash", ["daemon/run.sh"]);
-  daemon_ps.stdout.on('data', (data) => {
-    daemon_outputs += data.toString() + "\n";
-    if(daemon_outputs.length > 65536) {
-      daemon_outputs = daemon_outputs.slice(-65535);
+  daemonPS = child_process.spawn("bash", ["daemon/run.sh"]);
+  daemonPS.stdout.on('data', (data) => {
+    daemonOutputs += data.toString() + "\n";
+    if(daemonOutputs.length > 65536) {
+      daemonOutputs = daemonOutputs.slice(-65535);
     }
   });
-  daemon_ps.stderr.on('data', (data) => {
-    daemon_outputs += data.toString() + "\n";
-    if(daemon_outputs.length > 65536) {
-      daemon_outputs = daemon_outputs.slice(-65535);
+  daemonPS.stderr.on('data', (data) => {
+    daemonOutputs += data.toString() + "\n";
+    if(daemonOutputs.length > 65536) {
+      daemonOutputs = daemonOutputs.slice(-65535);
     }
   });
-  daemon_ps.on('exit', (code) => {
+  daemonPS.on('exit', (code) => {
     console.log("[INFO] Daemon exited with code " + code);
-    daemon_ps = undefined;
+    daemonPS = undefined;
   });
 };
 
 app.get('/api/daemon', (req, res) => {
-  if(daemon_ps === undefined) {
+  if(daemonPS === undefined) {
     res.send("not_running");
     return;
   }
@@ -350,7 +353,7 @@ app.get('/api/daemon', (req, res) => {
 
 app.put('/api/daemon', (req, res) => {
   // Switch
-  let running = daemon_ps !== undefined;
+  let running = daemonPS !== undefined;
   killDaemon();
   if(!running) {
     startDaemon();
@@ -371,17 +374,38 @@ app.post('/api/daemon/stop', (req, res) => {
 
 app.get('/api/daemon/outputs', (req, res) => {
   res.set('Content-Type', 'text/plain');
-  res.send(daemon_outputs);
+  res.send(daemonOutputs);
 });
 
 
 // Download Model
 
 app.get('/api/download-model-presets', (req, res) => {
-  res.send(webui_model_download_presets);
+  res.send(webuiModelDownloadPresets);
 });
 
-let download_ps = [];
+let downloadPS = [];
+
+const addDownloadPS = (ps, repoID, subdir) => {
+  let obj = {
+    repoID: repoID,
+    subdir: subdir,
+    ps: ps,
+    started: new Date(),
+  };
+  downloadPS.push(obj);
+  ps.stdout.on('data', (data) => {
+    obj.out += data.toString();
+  });
+  ps.stderr.on('data', (data) => {
+    obj.out += data.toString();
+  });
+  ps.on('exit', (code) => {
+    // Remove from download ps
+    console.log("[INFO] Downloading model: Done (" + repoID + ", " + subdir + ")");
+    downloadPS = downloadPS.filter((x) => x.repoID != repo_id || x.subdir != subdir);
+  });
+};
 
 // New model download
 app.post('/api/download-model', (req, res) => {
@@ -399,31 +423,13 @@ app.post('/api/download-model', (req, res) => {
       res.status(400).send("Invalid JSON");
       return;
     }
-    const repo_id = json.repo_id;
+    const repoID = json.repo_id;
     const subdir = json.subdir;
     // Create process
-    let out_path = models_path + "/" + repo_id;
+    let outPath = modelsPath + "/" + repoID;
     let ps = child_process.spawn(
-      "bash", ["daemon/download-hf-snapshot.sh", out_path, repo_id, subdir]);
-    let obj = {
-      repo_id: repo_id,
-      subdir: subdir,
-      ps: ps,
-      out: "",
-    };
-    // Add to download ps
-    download_ps.push(obj);
-    ps.stdout.on('data', (data) => {
-      obj.out += data.toString();
-    });
-    ps.stderr.on('data', (data) => {
-      obj.out += data.toString();
-    });
-    ps.on('exit', (code) => {
-      // Remove from download ps
-      console.log("[INFO] Downloading model: Done (" + repo_id + ", " + subdir + ")");
-      download_ps = download_ps.filter((x) => x["repo_id"] != repo_id || x["subdir"] != subdir);
-    });
+      "bash", ["daemon/download-hf-snapshot.sh", out_path, repoID, subdir]);
+    addDownloadPS(ps, repoID, subdir);
     res.send("OK");
   });
 });
@@ -448,34 +454,16 @@ app.post('/api/download-lora', (req, res) => {
     const name = json.name;
     // Create process
     // mkdir to model_path/lora
-    let out_path = models_path + "/lora";
-    if(!fs.existsSync(out_path)) {
-      fs.mkdirSync(out_path, {recursive: true});
+    let outPath = modelsPath + "/lora";
+    if(!fs.existsSync(outPath)) {
+      fs.mkdirSync(outPath, {recursive: true});
     }
     let filename = name + ".safetensors";
     let ps = child_process.spawn(
-      "curl", ["-L", "-o", out_path + "/" + filename, url]);
-    let repo_id = url;
+      "curl", ["-L", "-o", outPath + "/" + filename, url]);
+    let repoID = url;
     let subdir = "lora/" + filename;
-    let obj = {
-      repo_id: repo_id,
-      subdir: subdir,
-      ps: ps,
-      out: "",
-    };
-    // Add to download ps
-    download_ps.push(obj);
-    ps.stdout.on('data', (data) => {
-      obj.out += data.toString();
-    });
-    ps.stderr.on('data', (data) => {
-      obj.out += data.toString();
-    });
-    ps.on('exit', (code) => {
-      // Remove from download ps
-      console.log("[INFO] Downloading model: Done (" + repo_id + ", " + subdir + ")");
-      download_ps = download_ps.filter((x) => x["repo_id"] != repo_id || x["subdir"] != subdir);
-    });
+    addDownloadPS(ps, repoID, subdir);
     res.send("OK");
   });
 });
@@ -483,7 +471,7 @@ app.post('/api/download-lora', (req, res) => {
 // Get download status
 app.get('/api/download-model', (req, res) => {
   let lst = [];
-  for(let obj of download_ps) {
+  for(let obj of downloadPS) {
     lst.push({
       repo_id: obj["repo_id"],
       subdir: obj["subdir"],
@@ -495,6 +483,6 @@ app.get('/api/download-model', (req, res) => {
 
 
 // Open server with random port
-let server = app.listen(webui_port, webui_host, () => {
+let server = app.listen(webuiPort, webuiHost, () => {
   console.log("[INFO] - Open http://" + server.address().address + ":" + server.address().port + "/ in your browser")
 });
