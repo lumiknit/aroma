@@ -195,7 +195,7 @@ class SDPipes:
         print(f"[INFO] Set-up pipeline")
 
         # Enable memory efficient options
-        txt2img.enable_attention_slicing(slice_size="auto")
+        # txt2img.enable_attention_slicing(slice_size="auto")
         # txt2img.enable_vae_slicing()
         # txt2img.enable_vae_tiling()
 
@@ -473,18 +473,19 @@ class SDPipes:
         return img
 
     def text_to_image(self, state):
-        values = state.values
-        params = values["params"]
-        # If model changed, run from reload model
-        print(f"A: {self.model_path}")
-        print(f"B: {state.models_root}/{values['model']['path']}")
-        lora_path = "" if len(values['model']['lora_path']) == 0 else f"{state.models_root}/{values['model']['lora_path']}"
-        if (
-            self.model_path != f"{state.models_root}/{values['model']['path']}"
-            or self.clip_skip != values["model"]["clip_skip"]
-            or self.lora_path != lora_path
-            or self.lora_alpha != values['model']['lora_alpha']
-        ):
-            return self._txt2img_load_model(state)
-        # Otherwise, run from update_prompt
-        return self._txt2img_update_prompt(state)
+        with torch.inference_mode():
+            values = state.values
+            params = values["params"]
+            # If model changed, run from reload model
+            print(f"A: {self.model_path}")
+            print(f"B: {state.models_root}/{values['model']['path']}")
+            lora_path = "" if len(values['model']['lora_path']) == 0 else f"{state.models_root}/{values['model']['lora_path']}"
+            if (
+                self.model_path != f"{state.models_root}/{values['model']['path']}"
+                or self.clip_skip != values["model"]["clip_skip"]
+                or self.lora_path != lora_path
+                or self.lora_alpha != values['model']['lora_alpha']
+            ):
+                return self._txt2img_load_model(state)
+            # Otherwise, run from update_prompt
+            return self._txt2img_update_prompt(state)
